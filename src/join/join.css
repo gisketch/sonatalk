@@ -1,0 +1,27 @@
+/* Phone client chrome — deck design tokens, hand-held proportions. */
+html, body { overflow: hidden; overscroll-behavior: none; }
+.phone {
+  height: 100%; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 1.2rem; background: var(--ivory); color: var(--ink);
+  padding: 1.6rem; text-align: center; touch-action: manipulation;
+}
+.phone .eyebrow { margin-bottom: 0; }
+.phone-note { font-size: 0.95rem; color: var(--muted); line-height: 1.5; max-width: 22em; }
+.phone-title { font-family: var(--serif); font-weight: 500; font-size: 1.7rem; line-height: 1.15; }
+.pulse { animation: pulseSpark 2.4s ease-in-out infinite; }
+@keyframes pulseSpark {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.88); opacity: 0.65; }
+}
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+
+.bigmoji { font-size: 3rem; }
+
+/* buttons (deck's .btn lives in sim.css; the phone app carries its own copy) */
+.btn {
+  cursor: pointer; font-family: var(--mono); font-size: 0.85rem; letter-spacing: 0.06em;
+  border-radius: 2rem; padding: 0.7em 1.5em; border: 1px solid var(--ink);
+  background: var(--ink); color: var(--cream-on-dark); transition: all 0.18s ease;
+}
+.btn:disabled { opacity: 0.35; pointer-events: none; }
+.btn.ghost { background: transparent; color: var(--ink-soft); border-color: var(--line); }

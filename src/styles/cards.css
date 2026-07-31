@@ -1,0 +1,27 @@
+/* card slides (sonata / sensors / docs / start tiny) */
+.card-row { flex: 1; display: grid; gap: clamp(1.2rem, 2.5vw, 2rem); align-content: center; min-height: 0; }
+.card-row.three { grid-template-columns: 1fr 1fr 1fr; }
+.card-row.two { grid-template-columns: 1fr 1fr; }
+.qcard {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 1.2rem;
+  padding: clamp(1.3rem, 3vh, 2rem) clamp(1.2rem, 2.2vw, 1.8rem); box-shadow: 0 1px 2px rgba(38, 38, 36, 0.04);
+}
+.qcard .badge {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%; background: rgba(217, 119, 87, 0.12);
+  display: flex; align-items: center; justify-content: center; color: var(--clay-deep);
+  margin-bottom: clamp(0.8rem, 2vh, 1.2rem);
+}
+.qcard h3 {
+  font-family: var(--serif); font-weight: 600; font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  margin-bottom: 0.4em; line-height: 1.25;
+}
+.qcard h3 code { font-family: var(--mono); font-size: 0.85em; color: var(--clay-deep); }
+.qcard p { font-size: clamp(0.85rem, 1.35vw, 1rem); color: var(--muted); line-height: 1.55; }
+.qcard p b { color: var(--ink-soft); font-weight: 600; }
+.qcard .mistake {
+  display: block; font-family: var(--mono); font-size: clamp(0.62rem, 1vw, 0.74rem);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--clay-deep); margin-bottom: 0.6em;
+}
+.qcard.dark-card { background: var(--ink); border-color: var(--ink); color: var(--cream-on-dark); }
+.qcard.dark-card p { color: var(--muted-on-dark); }
+.qcard.dark-card p b { color: var(--cream-on-dark); }

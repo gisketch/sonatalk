@@ -1,0 +1,10 @@
+services:
+  sonatalk:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      PORT: "8787"
+      # Set the real token in .env on the VPS — never commit it.
+      PRESENTER_TOKEN: ${PRESENTER_TOKEN:?set PRESENTER_TOKEN in .env}
