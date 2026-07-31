@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createBattle, findWinner, step, RAMP_AT, type BattleState } from './engine'
-import { beats, resolve, soleTeam, type Team } from './rps'
+import { createBattle, findWinner, step, ARENA_H, ARENA_W, RAMP_AT } from './engine'
+import { beats, preyOf, resolve, soleTeam, type Team } from './rps'
 
 describe('rps resolution', () => {
   const cases: Array<[Team, Team, Team | null]> = [
@@ -23,6 +23,12 @@ describe('rps resolution', () => {
     for (const a of teams) for (const b of teams) {
       if (a !== b) expect(beats(a, b)).toBe(!beats(b, a))
     }
+  })
+
+  it('prey chain forms the full cycle', () => {
+    expect(preyOf('rock')).toBe('scissors')
+    expect(preyOf('scissors')).toBe('paper')
+    expect(preyOf('paper')).toBe('rock')
   })
 })
 
@@ -64,6 +70,26 @@ describe('battle end conditions', () => {
     const events = step(state, 0.016)
     expect(events).toEqual([])
     expect(state.entities.every((e) => e.alive)).toBe(true)
+  })
+
+  it('chosen spawns place entities at normalized positions; chasers close in', () => {
+    const state = createBattle(
+      [
+        { id: 'hunter', name: 'H', team: 'rock', spawn: { x: 0, y: 0.5 } },
+        { id: 'prey', name: 'P', team: 'scissors', spawn: { x: 1, y: 0.5 } },
+      ],
+      ARENA_W,
+      ARENA_H,
+    )
+    const [hunter, prey] = state.entities
+    expect(hunter.x).toBeLessThan(prey.x) // spawned left vs right
+    const gap0 = Math.hypot(prey.x - hunter.x, prey.y - hunter.y)
+    for (let i = 0; i < 90; i++) step(state, 1 / 30) // 3s of chasing
+    const alive = state.entities.filter((e) => e.alive)
+    const gap1 = alive.length === 2
+      ? Math.hypot(alive[1].x - alive[0].x, alive[1].y - alive[0].y)
+      : 0
+    expect(gap1).toBeLessThan(gap0) // chase closes the gap (or already ate them)
   })
 
   it('forced-end ramp shrinks the arena and battles resolve under 90s', () => {

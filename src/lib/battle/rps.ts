@@ -5,6 +5,11 @@ export const TEAM_EMOJI: Record<Team, string> = { rock: '🪨', paper: '📄', s
 
 const PREY: Record<Team, Team> = { rock: 'scissors', scissors: 'paper', paper: 'rock' }
 
+/** The team this team hunts (and kills on contact). */
+export function preyOf(team: Team): Team {
+  return PREY[team]
+}
+
 export function beats(a: Team, b: Team): boolean {
   return PREY[a] === b
 }

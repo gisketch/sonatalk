@@ -1,6 +1,7 @@
 <script lang="ts">
   import Defs from './lib/components/Defs.svelte'
   import LiveBar from './lib/components/LiveBar.svelte'
+  import ReadyPanel from './lib/components/ReadyPanel.svelte'
   import ThumbRail from './lib/components/ThumbRail.svelte'
   import { deck } from './lib/deck.svelte'
   import { presenter } from './lib/net/presenter.svelte'
@@ -33,6 +34,7 @@
 
 <LiveBar />
 <ThumbRail />
+<ReadyPanel />
 <div class="progress" style:width="{((deck.current + 1) / slides.length) * 100}%"></div>
 <div class="hud">
   <span class="keys">←/→ nav · N notes · F fullscreen</span>

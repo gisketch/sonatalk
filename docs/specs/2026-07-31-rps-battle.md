@@ -65,6 +65,11 @@ experience was one harness-built application.
   documented exception to "server owns truth," justified because phones cannot affect the
   battle once it starts (broadcast, not shared state).
 - Elimination not conversion; free pick, lopsided teams accepted as comedy.
+- v2 (post-playtest): movement is chase-based, not DVD-bounce — each entity hunts its nearest
+  prey (rock→scissors→paper→rock) with per-player randomized speed; readiness is a gate:
+  pick + phone-chosen spawn position (mini arena map, normalized coords) + READY button.
+  Deck shows "N ready / M connected" plus who's not ready (bottom-left, never over CTAs);
+  battle slide has a playback speed control (0.5×–3×) with visible multiplier.
 - Sim determinism is not required (no replay); but the RPS resolution function must be pure and
   unit-tested — it is the one piece of game logic with a wrong answer.
 - Battle slide slots between the simulator slide and "Start tiny"; reveal replaces/extends the

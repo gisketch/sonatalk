@@ -53,8 +53,16 @@
     <NameGate onsubmit={(name) => link.send({ type: 'setName', name })} />
   {:else if phase === 'canvas' || phase === 'tools' || phase === 'drawing'}
     <DrawBoard {phase} {payload} {myId} name={me?.name ?? null} />
+  {:else if phase === 'pick' && me?.ready}
+    <div class="bigmoji">{me.pick === 'rock' ? '🪨' : me.pick === 'paper' ? '📄' : '✂️'}</div>
+    <p class="phone-title">Ready.</p>
+    <p class="phone-note">Spawn locked. Watch the big screen — battle starts soon.</p>
   {:else if phase === 'pick'}
-    <PickRPS pick={me?.pick ?? null} onpick={(pick) => link.send({ type: 'pick', pick })} />
+    <PickRPS
+      pick={me?.pick ?? null}
+      onpick={(pick) => link.send({ type: 'pick', pick })}
+      onready={(spawn) => link.send({ type: 'ready', spawn })}
+    />
   {:else if phase === 'battle' && dead}
     <div class="bigmoji">💀</div>
     <p class="phone-title">Eliminated!</p>

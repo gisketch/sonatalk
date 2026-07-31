@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  addPlayer, createSession, drawingOpen, resetSession, setName, setPhase, setPick,
+  addPlayer, createSession, drawingOpen, resetSession, setName, setPhase, setPick, setReady,
 } from './session.js'
 
 describe('session', () => {
@@ -41,12 +41,26 @@ describe('session', () => {
     expect(drawingOpen(s, endsAt + 5_000)).toBe(false) // late upload rejected
   })
 
+  it('ready requires pick phase, a pick, and finite coords; clamps spawn', () => {
+    const s = createSession()
+    const p = addPlayer(s)
+    expect(setReady(s, p.id, { x: 0.5, y: 0.5 })).toBe(false) // wrong phase
+    setPhase(s, 'pick')
+    expect(setReady(s, p.id, { x: 0.5, y: 0.5 })).toBe(false) // no pick yet
+    setPick(s, p.id, 'rock')
+    expect(setReady(s, p.id, { x: 'nope', y: 0.5 })).toBe(false)
+    expect(setReady(s, p.id, { x: 1.7, y: -0.2 })).toBe(true)
+    expect(p.ready).toBe(true)
+    expect(p.spawn).toEqual({ x: 1, y: 0 }) // clamped
+  })
+
   it('reset returns to lobby, keeps players, wipes their progress', () => {
     const s = createSession()
     const p = addPlayer(s)
     setName(s, p.id, 'Ghe')
     setPhase(s, 'pick')
     setPick(s, p.id, 'rock')
+    setReady(s, p.id, { x: 0.3, y: 0.7 })
     p.hasDrawing = true
     p.alive = false
     s.drawings.set(p.id, Buffer.from('png'))
@@ -57,6 +71,8 @@ describe('session', () => {
     expect(p.pick).toBe(null)
     expect(p.alive).toBe(true)
     expect(p.hasDrawing).toBe(false)
+    expect(p.ready).toBe(false)
+    expect(p.spawn).toBe(null)
     expect(s.drawings.size).toBe(0)
   })
 

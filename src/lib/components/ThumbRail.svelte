@@ -1,9 +1,7 @@
 <script lang="ts">
   import { presenter } from '../net/presenter.svelte'
 
-  const visible = $derived(
-    presenter.live && ['drawing', 'pick'].includes(presenter.phase),
-  )
+  const visible = $derived(presenter.live && presenter.phase === 'drawing')
   const entries = $derived(
     presenter.players
       .filter((p) => presenter.drawings[p.id] && presenter.drawings[p.id] !== 'pending')
@@ -24,9 +22,10 @@
 
 <style>
   .rail {
-    position: fixed; bottom: 2.6rem; left: 50%; transform: translateX(-50%); z-index: 9;
+    /* bottom-left, away from centered CTAs */
+    position: fixed; bottom: 1.1rem; left: 1.4rem; z-index: 9;
     display: flex; gap: 0.6rem; padding: 0.5rem 0.8rem; background: var(--paper);
-    border: 1px solid var(--line); border-radius: 1rem; max-width: 86vw; overflow-x: auto;
+    border: 1px solid var(--line); border-radius: 1rem; max-width: 42vw; overflow-x: auto;
     box-shadow: 0 6px 24px rgba(38, 38, 36, 0.1);
   }
   figure { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }

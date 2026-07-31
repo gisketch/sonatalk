@@ -65,6 +65,10 @@ function spawnPhone(i) {
       phone.picked = true
       stats.picked++
       ws.send(JSON.stringify({ type: 'pick', pick: PICKS[i % 3] }))
+      // choose a spawn spread across the arena and lock in
+      const spawn = { x: 0.1 + ((i * 0.79) % 0.8), y: 0.1 + ((i * 0.37) % 0.8) }
+      ws.send(JSON.stringify({ type: 'ready', spawn }))
+      stats.ready = (stats.ready ?? 0) + 1
     }
     if (msg.phase === 'reveal') finish('reveal reached')
   })

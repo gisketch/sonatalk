@@ -1,4 +1,4 @@
-import { resolve, soleTeam, type Team } from './rps'
+import { preyOf, resolve, soleTeam, type Team } from './rps'
 
 export interface Entity {
   id: string
@@ -8,6 +8,8 @@ export interface Entity {
   y: number
   vx: number
   vy: number
+  /** per-player speed, randomized at spawn */
+  speed: number
   r: number
   alive: boolean
 }
@@ -27,34 +29,57 @@ export interface Elimination {
   by: string
 }
 
-const BASE_SPEED = 90 // px/s
-export const RAMP_AT = 45 // s — arena shrinks + speeds up after this
-const RAMP_SPEED_PER_S = 0.035 // +3.5% speed per second past the ramp
-const RAMP_INSET_PER_S = 6 // px of wall per second past the ramp
+export interface SpawnPlayer {
+  id: string
+  name: string
+  team: Team
+  /** normalized 0..1 arena position chosen on the phone; ring fallback when absent */
+  spawn?: { x: number; y: number } | null
+}
+
+/** Canonical arena raster — deck renders it, phones mirror its aspect for spawn choice. */
+export const ARENA_W = 1280
+export const ARENA_H = 620
+
+const BASE_SPEED = 95 // px/s
+const SPEED_JITTER: [number, number] = [0.65, 1.45] // per-player random factor
+const TURN_RATE = 3.2 // rad/s steering toward prey
+export const RAMP_AT = 45 // s — speeds up + arena shrinks after this
+const RAMP_SPEED_PER_S = 0.035
+const RAMP_INSET_PER_S = 6
 const MAX_INSET_FRACTION = 0.36
 
-export function createBattle(
-  players: Array<{ id: string; name: string; team: Team }>,
-  w: number,
-  h: number,
-  radius = 34,
-): BattleState {
+export function createBattle(players: SpawnPlayer[], w: number, h: number, radius = 34): BattleState {
   const entities = players.map((p, i) => {
-    const angle = (i / Math.max(1, players.length)) * Math.PI * 2
+    const ring = (i / Math.max(1, players.length)) * Math.PI * 2
+    const x = p.spawn ? p.spawn.x * (w - radius * 2) + radius : w / 2 + Math.cos(ring) * (w / 3.2)
+    const y = p.spawn ? p.spawn.y * (h - radius * 2) + radius : h / 2 + Math.sin(ring) * (h / 3.2)
     const dir = Math.random() * Math.PI * 2
+    const speed =
+      BASE_SPEED * (SPEED_JITTER[0] + Math.random() * (SPEED_JITTER[1] - SPEED_JITTER[0]))
     return {
-      id: p.id,
-      name: p.name,
-      team: p.team,
-      x: w / 2 + Math.cos(angle) * (w / 3.2),
-      y: h / 2 + Math.sin(angle) * (h / 3.2),
-      vx: Math.cos(dir) * BASE_SPEED,
-      vy: Math.sin(dir) * BASE_SPEED,
-      r: radius,
-      alive: true,
+      id: p.id, name: p.name, team: p.team,
+      x, y,
+      vx: Math.cos(dir) * speed, vy: Math.sin(dir) * speed,
+      speed, r: radius, alive: true,
     }
   })
   return { entities, w, h, elapsed: 0, inset: 0 }
+}
+
+function nearestPrey(e: Entity, alive: Entity[]): Entity | null {
+  const prey = preyOf(e.team)
+  let best: Entity | null = null
+  let bestDist = Infinity
+  for (const other of alive) {
+    if (other.team !== prey || !other.alive) continue
+    const d = Math.hypot(other.x - e.x, other.y - e.y)
+    if (d < bestDist) {
+      bestDist = d
+      best = other
+    }
+  }
+  return best
 }
 
 /** Advance the sim by dt seconds. Mutates state; returns eliminations this step. */
@@ -69,8 +94,24 @@ export function step(state: BattleState, dt: number): Elimination[] {
 
   const alive = state.entities.filter((e) => e.alive)
   for (const e of alive) {
-    e.x += e.vx * speedMul * dt
-    e.y += e.vy * speedMul * dt
+    // steer toward nearest prey; without prey, keep current heading
+    const target = nearestPrey(e, alive)
+    const heading = Math.atan2(e.vy, e.vx)
+    let newHeading = heading
+    if (target) {
+      const want = Math.atan2(target.y - e.y, target.x - e.x)
+      let diff = want - heading
+      while (diff > Math.PI) diff -= Math.PI * 2
+      while (diff < -Math.PI) diff += Math.PI * 2
+      const turn = Math.max(-TURN_RATE * dt, Math.min(TURN_RATE * dt, diff))
+      newHeading = heading + turn
+    }
+    const v = e.speed * speedMul
+    e.vx = Math.cos(newHeading) * v
+    e.vy = Math.sin(newHeading) * v
+    e.x += e.vx * dt
+    e.y += e.vy * dt
+
     const minX = state.inset + e.r
     const maxX = state.w - state.inset - e.r
     const minY = state.inset + e.r
@@ -93,7 +134,7 @@ export function step(state: BattleState, dt: number): Elimination[] {
       if (dist === 0 || dist > a.r + b.r) continue
       const winnerTeam = resolve(a.team, b.team)
       if (winnerTeam === null) {
-        bounce(a, b, dx, dy, dist)
+        separate(a, b, dx, dy, dist)
       } else {
         const loser = winnerTeam === a.team ? b : a
         const winner = winnerTeam === a.team ? a : b
@@ -105,8 +146,8 @@ export function step(state: BattleState, dt: number): Elimination[] {
   return events
 }
 
-function bounce(a: Entity, b: Entity, dx: number, dy: number, dist: number) {
-  // swap velocity components along the collision normal; separate overlap
+/** Same-team overlap: push apart, no deaths. */
+function separate(a: Entity, b: Entity, dx: number, dy: number, dist: number) {
   const nx = dx / dist
   const ny = dy / dist
   const overlap = a.r + b.r - dist
@@ -114,13 +155,6 @@ function bounce(a: Entity, b: Entity, dx: number, dy: number, dist: number) {
   a.y -= (ny * overlap) / 2
   b.x += (nx * overlap) / 2
   b.y += (ny * overlap) / 2
-  const va = a.vx * nx + a.vy * ny
-  const vb = b.vx * nx + b.vy * ny
-  const dv = va - vb
-  a.vx -= dv * nx
-  a.vy -= dv * ny
-  b.vx += dv * nx
-  b.vy += dv * ny
 }
 
 /** Winning team once one team remains among the living; null while contested. */

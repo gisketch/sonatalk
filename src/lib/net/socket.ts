@@ -6,6 +6,9 @@ export interface PlayerInfo {
   pick: 'rock' | 'paper' | 'scissors' | null
   alive: boolean
   hasDrawing: boolean
+  ready: boolean
+  /** normalized 0..1 arena coordinates chosen on the phone */
+  spawn: { x: number; y: number } | null
 }
 
 export interface Snapshot {

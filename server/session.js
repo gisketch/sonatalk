@@ -19,7 +19,10 @@ export function createSession() {
 }
 
 export function addPlayer(session) {
-  const player = { id: randomUUID(), name: null, pick: null, alive: true, hasDrawing: false }
+  const player = {
+    id: randomUUID(), name: null, pick: null, alive: true, hasDrawing: false,
+    ready: false, spawn: null,
+  }
   session.players.set(player.id, player)
   return player
 }
@@ -39,6 +42,8 @@ export function resetSession(session) {
     player.pick = null
     player.alive = true
     player.hasDrawing = false
+    player.ready = false
+    player.spawn = null
   }
 }
 
@@ -66,6 +71,18 @@ export function setPick(session, id, pick) {
   return true
 }
 
+/** Ready = pick locked + spawn chosen (normalized 0..1 coords). Pick phase only. */
+export function setReady(session, id, spawn) {
+  const player = session.players.get(id)
+  if (!player || session.phase !== 'pick' || !player.pick) return false
+  const x = Number(spawn?.x)
+  const y = Number(spawn?.y)
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false
+  player.spawn = { x: Math.min(1, Math.max(0, x)), y: Math.min(1, Math.max(0, y)) }
+  player.ready = true
+  return true
+}
+
 /** 60s for the talk; overridable for rehearsal runs. Clients read the deadline from payload. */
 export const DRAW_SECONDS = Number(process.env.DRAW_SECONDS ?? 60)
 const UPLOAD_GRACE_MS = 2_000
@@ -84,6 +101,7 @@ export function snapshot(session) {
     payload: session.payload,
     players: [...session.players.values()].map((p) => ({
       id: p.id, name: p.name, pick: p.pick, alive: p.alive, hasDrawing: p.hasDrawing,
+      ready: p.ready, spawn: p.spawn,
     })),
   }
 }

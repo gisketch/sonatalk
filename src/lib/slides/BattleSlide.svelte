@@ -3,12 +3,15 @@
   import { fx } from '../fx'
   import { presenter } from '../net/presenter.svelte'
   import { renderBattle, entityAt } from '../battle/draw'
-  import { createBattle, findWinner, step, type BattleState } from '../battle/engine'
+  import {
+    ARENA_H, ARENA_W, createBattle, findWinner, step, type BattleState,
+  } from '../battle/engine'
   import { TEAM_EMOJI, TEAMS, type Team } from '../battle/rps'
 
-  const W = 1280
-  const H = 620
+  const W = ARENA_W
+  const H = ARENA_H
   const TICK_MS = 1000 / 30 // interval-driven, immune to rAF throttling
+  const SPEEDS = [0.5, 0.75, 1, 1.5, 2, 3]
 
   let canvasEl: HTMLCanvasElement | undefined = $state()
   let battle: BattleState | null = $state.raw(null)
@@ -17,7 +20,10 @@
   let survivors = $state<Array<{ id: string; name: string }>>([])
   let timer: ReturnType<typeof setInterval> | undefined
   let lastTick = 0
+  let speedIdx = $state(2) // 1×
   const images = new Map<string, HTMLImageElement>()
+
+  const timeScale = $derived(SPEEDS[speedIdx])
 
   const live = $derived(presenter.live && !presenter.forceOffline)
   const canStart = $derived(
@@ -39,7 +45,9 @@
     if (live) {
       return presenter.players
         .filter((p) => p.pick)
-        .map((p) => ({ id: p.id, name: p.name ?? 'anon', team: p.pick as Team }))
+        .map((p) => ({
+          id: p.id, name: p.name ?? 'anon', team: p.pick as Team, spawn: p.spawn,
+        }))
     }
     return Array.from({ length: 12 }, (_, i) => ({
       id: `mock-${i}`,
@@ -76,7 +84,7 @@
     // Real-elapsed sub-stepping: the sim advances in wall-clock time even when the
     // browser throttles timers (hidden tab, busy main thread), without tunneling.
     const nowT = performance.now()
-    let elapsed = Math.min((nowT - lastTick) / 1000, 2)
+    let elapsed = Math.min((nowT - lastTick) / 1000, 2) * timeScale
     lastTick = nowT
     while (elapsed > 0) {
       const dt = Math.min(1 / 30, elapsed)
@@ -140,6 +148,13 @@
       {live ? 'crown the winners →' : '↺ run again'}
     </button>
   {/if}
+  {#if running}
+    <div class="speedctl">
+      <button class="btn ghost" onclick={() => (speedIdx = Math.max(0, speedIdx - 1))} disabled={speedIdx === 0}>−</button>
+      <span class="speed">{timeScale}×</span>
+      <button class="btn ghost" onclick={() => (speedIdx = Math.min(SPEEDS.length - 1, speedIdx + 1))} disabled={speedIdx === SPEEDS.length - 1}>+</button>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -156,5 +171,10 @@
   .winner-emoji { font-size: 3.4rem; }
   .winner-title { font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 2.8rem); }
   .winner-names { font-family: var(--mono); font-size: 0.9rem; color: var(--muted); }
-  .arena-ctl { display: flex; justify-content: center; padding-top: 0.8rem; }
+  .arena-ctl { display: flex; justify-content: center; align-items: center; gap: 1rem; padding-top: 0.8rem; }
+  .speedctl { display: flex; align-items: center; gap: 0.55rem; }
+  .speed {
+    font-family: var(--mono); font-size: 0.8rem; color: var(--ink-soft);
+    min-width: 2.6em; text-align: center;
+  }
 </style>

@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws'
 import {
-  DRAW_SECONDS, addPlayer, removePlayer, resetSession, setPhase, setName, setPick, snapshot,
+  DRAW_SECONDS, addPlayer, removePlayer, resetSession, setPhase, setName, setPick,
+  setReady, snapshot,
 } from './session.js'
 
 const HEARTBEAT_MS = 30_000 // keeps idle sockets alive through nginx proxy timeouts
@@ -48,6 +49,7 @@ export function attachWs(httpServer, session, presenterToken) {
       if (socket.role === 'phone') {
         if (msg.type === 'setName' && setName(session, socket.playerId, msg.name)) broadcast()
         if (msg.type === 'pick' && setPick(session, socket.playerId, msg.pick)) broadcast()
+        if (msg.type === 'ready' && setReady(session, socket.playerId, msg.spawn)) broadcast()
         return
       }
 
