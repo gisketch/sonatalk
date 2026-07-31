@@ -1,7 +1,8 @@
 <script lang="ts">
   import { presenter } from '../net/presenter.svelte'
 
-  const PHASES = ['names', 'canvas', 'tools', 'drawing', 'pick']
+  // Only once the 60s draw starts (and through picks) — never over the demo slides.
+  const PHASES = ['drawing', 'pick']
 
   const visible = $derived(presenter.live && PHASES.includes(presenter.phase))
   const roster = $derived(
@@ -12,14 +13,11 @@
 
   /** ✓ when the player finished what the current phase asks of them. */
   const doneFor = (p: (typeof roster)[0]) => {
-    if (presenter.phase === 'names') return !!p.name
     if (presenter.phase === 'drawing') return p.hasDrawing
-    if (presenter.phase === 'pick') return p.ready
-    return null // canvas/tools: nothing to complete, presence only
+    return p.ready // pick
   }
 
   const doneCount = $derived(roster.filter((p) => doneFor(p) === true).length)
-  const hasStatus = $derived(!['canvas', 'tools'].includes(presenter.phase))
   const thumb = (id: string) => {
     const url = presenter.drawings[id]
     return url && url !== 'pending' ? url : null
@@ -28,11 +26,9 @@
 
 {#if visible && roster.length}
   <aside class="player-rail">
-    {#if hasStatus}
-      <div class="rail-head"><b>{doneCount}</b> / {roster.length} ready</div>
-    {:else}
-      <div class="rail-head">{roster.length} drawing</div>
-    {/if}
+    <div class="rail-head">
+      <b>{doneCount}</b> / {roster.length} {presenter.phase === 'drawing' ? 'done' : 'ready'}
+    </div>
     <div class="rail-list">
       {#each roster as p (p.id)}
         <div class="prow" class:done={doneFor(p) === true}>
@@ -42,9 +38,7 @@
             <span class="pinit">{(p.name ?? '?').slice(0, 1).toUpperCase()}</span>
           {/if}
           <span class="pname">{p.name ?? 'anon'}</span>
-          {#if doneFor(p) !== null}
-            <span class="pstat">{doneFor(p) ? '✓' : '…'}</span>
-          {/if}
+          <span class="pstat">{doneFor(p) ? '✓' : '…'}</span>
         </div>
       {/each}
     </div>

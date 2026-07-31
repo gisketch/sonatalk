@@ -3,9 +3,7 @@
   import { deck } from '../deck.svelte'
   import { fx } from '../fx'
   import { presenter } from '../net/presenter.svelte'
-  import {
-    LIVE_ORDER, LIVE_SCENARIOS, LIVE_SHIPS, SCENARIOS, TABS, type ScenarioKey,
-  } from './scenarios'
+  import { ORDER, SCENARIOS, SHIPS } from './scenarios'
 
   interface Msg {
     who: 'user' | 'ai' | 'sys'
@@ -17,39 +15,37 @@
 
   /** Deck-refresh recovery: resume the tier sequence from the server's current phase. */
   const shippedCount = () => {
-    const shipped = Object.values(LIVE_SHIPS)
     const reached = ['names', 'canvas', 'tools', 'drawing', 'pick', 'battle', 'winners', 'reveal']
       .indexOf(presenter.phase)
-    return reached < 0 ? 0 : Math.min(reached + 1, shipped.length)
+    return reached < 0 ? 0 : Math.min(reached + 1, ORDER.length)
   }
 
-  let sc: ScenarioKey = $state('complex')
-  let liveIndex = $state(presenter.live ? shippedCount() : 0)
-
-  // Session reset (Shift+R) rewinds the tier sequence with it.
-  $effect(() => {
-    if (live && presenter.phase === 'lobby' && liveIndex > 0) {
-      liveIndex = 0
-      reset()
-    }
-  })
+  let tierIndex = $state(presenter.live ? shippedCount() : 0)
   let si = $state(0)
   let busy = $state(false)
   let stage = $state(-1)
   let messages = $state<Msg[]>([])
   let chatBody: HTMLDivElement | undefined
 
-  const activeKey = $derived(live ? LIVE_ORDER[Math.min(liveIndex, LIVE_ORDER.length - 1)] : sc)
-  const scen = $derived((live ? LIVE_SCENARIOS : SCENARIOS)[activeKey])
+  // Session reset (Shift+R) rewinds the tier sequence with it.
+  $effect(() => {
+    if (live && presenter.phase === 'lobby' && tierIndex > 0) {
+      tierIndex = 0
+      reset()
+    }
+  })
+
+  const activeKey = $derived(ORDER[Math.min(tierIndex, ORDER.length - 1)])
+  const scen = $derived(SCENARIOS[activeKey])
   const done = $derived(si >= scen.steps.length)
-  const allShipped = $derived(live && liveIndex >= LIVE_ORDER.length)
+  const allShipped = $derived(tierIndex >= ORDER.length)
 
   // Post-ship live flow: the same button starts the 60s draw, then opens the picks.
   let simNow = $state(Date.now())
   $effect(() => {
     if (!(live && presenter.phase === 'drawing')) return
-    const tick = setInterval(() => (simNow = Date.now()), 500)
-    return () => clearInterval(tick)
+    const t = setInterval(() => (simNow = Date.now()), 500)
+    return () => clearInterval(t)
   })
   const drawRemaining = $derived(
     presenter.phase === 'drawing'
@@ -64,17 +60,16 @@
   const allUploaded = $derived(connected.length > 0 && connected.every((p) => p.hasDrawing))
   const allReady = $derived(connected.length > 0 && connected.every((p) => p.ready))
 
-  function select(key: ScenarioKey) {
-    if (live) return
-    sc = key
-    reset()
-  }
-
   function reset() {
     si = 0
     busy = false
     stage = -1
     messages = []
+  }
+
+  function restartOffline() {
+    tierIndex = 0
+    reset()
   }
 
   async function scrollDown() {
@@ -86,24 +81,20 @@
     if (presenter.phase === 'tools') presenter.advance('drawing')
     else if (presenter.phase === 'drawing' && (drawRemaining === 0 || allUploaded)) {
       presenter.advance('pick')
-    } else if (presenter.phase === 'pick' && allReady) {
-      deck.next() // everyone locked in — straight to the arena slide
-    }
+    } else if (presenter.phase === 'pick' && allReady) deck.next()
   }
 
   async function next() {
     if (busy) return
     if (allShipped) {
-      liveNext()
+      if (live) liveNext()
       return
     }
-    if (done && live) {
-      // move to the next tier's script
-      liveIndex++
-      if (liveIndex < LIVE_ORDER.length) reset()
+    if (done) {
+      tierIndex++
+      if (tierIndex < ORDER.length) reset()
       return
     }
-    if (done) return
     busy = true
     const step = scen.steps[si]
     stage = step.stage
@@ -118,25 +109,17 @@
     si++
     if (si >= scen.steps.length) {
       stage = scen.pipe.length
-      if (live) presenter.advance(LIVE_SHIPS[activeKey]) // the drop: feature ships to phones
+      if (live) presenter.advance(SHIPS[activeKey]) // the drop: feature ships to phones
     }
     busy = false
     await scrollDown()
   }
 
-  const tierState = (key: ScenarioKey) =>
-    live
-      ? LIVE_ORDER.indexOf(key) < liveIndex || allShipped
-        ? 'done'
-        : LIVE_ORDER.indexOf(key) === liveIndex
-          ? 'on'
-          : 'pending'
-      : sc === key
-        ? 'on'
-        : 'pending'
+  const tierState = (i: number) =>
+    i < tierIndex || allShipped ? 'done' : i === tierIndex ? 'on' : 'pending'
 
   const nextLabel = $derived.by(() => {
-    if (allShipped) {
+    if (allShipped && live) {
       if (presenter.phase === 'tools') return 'start the 60s draw →'
       if (presenter.phase === 'drawing') {
         if (drawRemaining === 0) return 'to the picks →'
@@ -146,47 +129,38 @@
         return allReady ? 'everyone ready — arena →' : 'picks open ✓'
       return 'all shipped ✓'
     }
-    if (done && live) return 'next feature →'
-    if (done) return 'done — pick another task ↑'
+    if (allShipped) return 'all shipped ✓'
+    if (done) return 'next feature →'
     return 'next step →'
   })
 
   const nextDisabled = $derived(
     busy ||
+      (allShipped && !live) ||
       (allShipped &&
+        live &&
         ((presenter.phase === 'pick' && !allReady) ||
           (presenter.phase === 'drawing' && drawRemaining !== 0 && !allUploaded))),
   )
 </script>
 
 <div class="sim-wrap">
-  <div class="sim-left" use:fx={{ d: 0.3 }}>
-    <div class="tabs">
-      {#each TABS as tab (tab.key)}
-        <button
-          class="tab"
-          class:on={tierState(tab.key) === 'on'}
-          class:shipped={tierState(tab.key) === 'done'}
-          onclick={() => select(tab.key)}
-        >
-          <span class="badge">
-            {#if tierState(tab.key) === 'done'}
-              <svg class="icon"><use href="#i-check" /></svg>
-            {:else}
-              <svg class="icon"><use href="#{tab.icon}" /></svg>
-            {/if}
-          </span>
-          <span><h4>{tab.label}</h4><p>{tab.blurb}</p></span>
-        </button>
-      {/each}
-    </div>
-    <div class="pipe">
+  <div class="sim-strip" use:fx={{ d: 0.3 }}>
+    {#each ORDER as key, i (key)}
+      <span class="tier" class:on={tierState(i) === 'on'} class:shipped={tierState(i) === 'done'}>
+        {#if tierState(i) === 'done'}<svg class="icon"><use href="#i-check" /></svg>{/if}
+        {SCENARIOS[key].label}
+      </span>
+      {#if i < ORDER.length - 1}<span class="tier-sep">→</span>{/if}
+    {/each}
+    <span class="strip-gap"></span>
+    <span class="pipe">
       {#each scen.pipe as chip, k (chip)}
         <span class="chip" class:done={k < stage} class:lit={k === stage}>{chip}</span>
       {/each}
-    </div>
+    </span>
   </div>
-  <div class="sim-right" use:fx={{ d: 0.5 }}>
+  <div class="sim-right" use:fx={{ d: 0.45 }}>
     <div class="chat">
       <div class="chat-bar">
         <span class="l">
@@ -223,7 +197,7 @@
     <div class="sim-ctl">
       <button class="btn" disabled={nextDisabled} onclick={next}>{nextLabel}</button>
       {#if !live}
-        <button class="btn ghost" onclick={reset}>↺ restart</button>
+        <button class="btn ghost" onclick={restartOffline}>↺ restart</button>
       {/if}
     </div>
   </div>

@@ -4,5 +4,5 @@
 </script>
 
 <div class="eyebrow" use:fx>Sonata · The Feature Workflow</div>
-<h2 use:fx={{ d: 0.1 }}>Pick a task. Watch the flow.</h2>
+<h2 use:fx={{ d: 0.1 }}>Every task gets sized. Watch the flow.</h2>
 <Simulator />
