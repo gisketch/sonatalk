@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte'
+  import { deck } from '../deck.svelte'
   import { fx } from '../fx'
   import { presenter } from '../net/presenter.svelte'
   import {
@@ -56,6 +57,13 @@
       : null,
   )
 
+  // Presenter overrides: skip the wait when the whole room is already done.
+  const connected = $derived(
+    presenter.players.filter((p) => (p as (typeof presenter.players)[0] & { connected?: boolean }).connected),
+  )
+  const allUploaded = $derived(connected.length > 0 && connected.every((p) => p.hasDrawing))
+  const allReady = $derived(connected.length > 0 && connected.every((p) => p.ready))
+
   function select(key: ScenarioKey) {
     if (live) return
     sc = key
@@ -76,7 +84,11 @@
 
   function liveNext() {
     if (presenter.phase === 'tools') presenter.advance('drawing')
-    else if (presenter.phase === 'drawing' && drawRemaining === 0) presenter.advance('pick')
+    else if (presenter.phase === 'drawing' && (drawRemaining === 0 || allUploaded)) {
+      presenter.advance('pick')
+    } else if (presenter.phase === 'pick' && allReady) {
+      deck.next() // everyone locked in — straight to the arena slide
+    }
   }
 
   async function next() {
@@ -126,9 +138,12 @@
   const nextLabel = $derived.by(() => {
     if (allShipped) {
       if (presenter.phase === 'tools') return 'start the 60s draw →'
-      if (presenter.phase === 'drawing')
-        return drawRemaining === 0 ? 'to the picks →' : `drawing… ${drawRemaining}s`
-      if (presenter.phase === 'pick') return 'picks open ✓'
+      if (presenter.phase === 'drawing') {
+        if (drawRemaining === 0) return 'to the picks →'
+        return allUploaded ? `everyone's done — picks →` : `drawing… ${drawRemaining}s`
+      }
+      if (presenter.phase === 'pick')
+        return allReady ? 'everyone ready — arena →' : 'picks open ✓'
       return 'all shipped ✓'
     }
     if (done && live) return 'next feature →'
@@ -139,8 +154,8 @@
   const nextDisabled = $derived(
     busy ||
       (allShipped &&
-        (presenter.phase === 'pick' ||
-          (presenter.phase === 'drawing' && drawRemaining !== 0))),
+        ((presenter.phase === 'pick' && !allReady) ||
+          (presenter.phase === 'drawing' && drawRemaining !== 0 && !allUploaded))),
   )
 </script>
 
