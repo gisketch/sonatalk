@@ -74,3 +74,16 @@
 <p class="footline" use:fx={{ d: 2.2 }}>
   Only feedback → it <b>repeats the same mistakes</b>. Only feedforward → you <b>never learn if the rules worked</b>.
 </p>
+<p class="sources" use:fx={{ d: 2.5 }}>
+  <span><b>OpenAI</b> — "iterate on the harness, not the model" · openai.com/index/harness-engineering</span>
+  <span><b>Böckeler</b> — guides steer, sensors correct · martinfowler.com, 2026</span>
+</p>
+
+<style>
+  .sources {
+    display: flex; gap: 2rem; flex-wrap: wrap; padding-top: 0.5rem;
+    font-family: var(--mono); font-size: clamp(0.58rem, 0.95vw, 0.72rem);
+    color: var(--muted); letter-spacing: 0.04em;
+  }
+  .sources b { color: var(--clay-deep); font-weight: 500; }
+</style>

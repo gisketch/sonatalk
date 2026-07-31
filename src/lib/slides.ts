@@ -5,6 +5,7 @@ import FlowSlide from './slides/FlowSlide.svelte'
 import SonataSlide from './slides/SonataSlide.svelte'
 import SensorsSlide from './slides/SensorsSlide.svelte'
 import DocsSlide from './slides/DocsSlide.svelte'
+import AnatomySlide from './slides/AnatomySlide.svelte'
 import BattleSlide from './slides/BattleSlide.svelte'
 import QRSlide from './slides/QRSlide.svelte'
 import RevealSlide from './slides/RevealSlide.svelte'
@@ -69,6 +70,11 @@ export const slides: SlideDef[] = [
     component: RevealSlide,
     notes:
       "1 min. THE reveal. Every drawing comes back. Point at the receipts: grill → specs → tickets → sensors firing mid-build. 'The app you just used was built the way this talk says to build.' Then Start Tiny.",
+  },
+  {
+    component: AnatomySlide,
+    notes:
+      "1 min. Bring it down to earth: the harness is just files in the repo. Click AGENTS.md — the map. Click quality.md — the sensors. Click the grill record — tonight's app came from this. Dimmed entries exist too; these are the load-bearing ones. Segue: you can start with ONE of these files.",
   },
   {
     component: StartTinySlide,
