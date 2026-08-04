@@ -14,6 +14,9 @@
 - If an audience app is approved, the sketch (not yet real): one Node process serving
   `/` (presenter deck) and `/join` (phone client), WebSocket fan-in of phone inputs,
   server aggregates and broadcasts. In-memory state only.
+- `src/sonata/` + `sonata-talk.html` — a second, standalone deck (Sonata KT, 17 slides) served at
+  `/sonata-talk`. Reuses the deck shell, styles, fx, and Defs from the main deck; no live/audience
+  features. Dev: `localhost:5173/sonata-talk.html`; prod: `localhost:8787/sonata-talk`.
 
 ## Boundary Rule
 

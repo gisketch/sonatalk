@@ -18,6 +18,7 @@ const session = createSession()
 // Static deck + phone client (production build). In dev, Vite serves these and proxies /ws here.
 app.use(express.static(dist))
 app.get('/join', (_req, res) => res.sendFile(path.join(dist, 'join.html')))
+app.get('/sonata-talk', (_req, res) => res.sendFile(path.join(dist, 'sonata-talk.html')))
 
 const server = http.createServer(app)
 const { broadcast } = attachWs(server, session, PRESENTER_TOKEN)

@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         join: resolve(import.meta.dirname, 'join.html'),
+        sonataTalk: resolve(import.meta.dirname, 'sonata-talk.html'),
       },
     },
   },

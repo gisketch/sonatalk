@@ -11,8 +11,8 @@ ab() { agent-browser "$@"; }
 ab open "$DECK_URL" >/dev/null
 ab wait 1500
 
-# walk to the simulator slide (index 7)
-for _ in $(seq 7); do ab press ArrowRight >/dev/null; done
+# walk to the simulator slide (index 8)
+for _ in $(seq 8); do ab press ArrowRight >/dev/null; done
 ab wait 1500
 
 # live tiers: click through until the button offers the draw timer (text-driven, click-loss proof)

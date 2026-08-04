@@ -10,6 +10,7 @@ import BattleSlide from './slides/BattleSlide.svelte'
 import QRSlide from './slides/QRSlide.svelte'
 import RevealSlide from './slides/RevealSlide.svelte'
 import SimulatorSlide from './slides/SimulatorSlide.svelte'
+import SkillsSlide from './slides/SkillsSlide.svelte'
 import StartTinySlide from './slides/StartTinySlide.svelte'
 import ClosingSlide from './slides/ClosingSlide.svelte'
 
@@ -50,6 +51,11 @@ export const slides: SlideDef[] = [
     component: DocsSlide,
     notes:
       "1 min. The feedforward half. Docs aren't an afterthought for humans anymore — they're executable context the agent loads before writing a line. And the system keeps them alive: features update the docs as part of the flow.",
+  },
+  {
+    component: SkillsSlide,
+    notes:
+      "1 min. Land skills for the devs in the room: it's a markdown file the agent loads on demand — what (a checklist it follows), how (slash command or auto-trigger via description), when (anything you explain twice). Point at the example: 20 lines, whole team gets your best workflow. Every Sonata step tonight is literally a skill. Segue: enough theory — phones out.",
   },
   {
     component: QRSlide,
