@@ -4,10 +4,13 @@ BEFORE STARTING: Shift+R once. Set TV delay on race slide later.
 
 ---
 
-## 1 · TITLE — 30s
+## 1 · TITLE — 45s
 - "Hi, quick one. Everyone talks about AI tools. Mine's a bit different."
 - **"Agents write code stupidly fast now. This talk is about the part nobody demos — TRUSTING what they write."**
-- "I built my own system for this. You'll see it working later. That's all I'm saying."
+- (point at the definition) "Quick word check — HARNESS. Like a horse harness."
+- **"The horse is the model — strong, fast, kinda wild. The harness is everything AROUND it: the docs, the rules, the checks. The harness is what makes all that power pull in YOUR direction."**
+- "The model? You rent that. Same one everyone has. The harness is the part you actually OWN — and that's what tonight is about."
+- "I built my own. You'll see it working later. That's all I'm saying."
 - (small smile, move on — don't spoil)
 
 ## 2 · THE PROBLEM — 45s

@@ -17,7 +17,15 @@
   const startsAt = $derived(Number(presenter.payload.startsAt ?? 0))
   const TARGET = $derived(Number(presenter.payload.target ?? 150))
   const countdown = $derived(Math.max(0, Math.ceil((startsAt - now) / 1000)))
-  const winner = $derived(presenter.payload.winner as { id: string; name: string } | undefined)
+  // A winner only counts here if it's THIS game's: mid-race, or a race crown.
+  // (Another game's crowned winner rides the winners payload too — ignore it.)
+  const winner = $derived.by(() => {
+    const w = presenter.payload.winner as { id: string; name: string } | undefined
+    if (!w) return undefined
+    if (presenter.phase === 'race') return w
+    if (presenter.phase === 'winners' && presenter.payload.from === 'race') return w
+    return undefined
+  })
   const crowned = $derived(presenter.phase === 'winners')
 
   const racers = $derived(
@@ -88,8 +96,9 @@
   function crown() {
     if (!winner) return
     presenter.crown([winner.id])
-    // winner rides along so the post-crown control (next game) stays reachable
-    presenter.advance('winners', { survivors: [winner.id], winner })
+    // winner rides along (tagged) so the post-crown control stays reachable
+    // without leaking into the next game's slide
+    presenter.advance('winners', { survivors: [winner.id], winner, from: 'race' })
     airhorn()
   }
 

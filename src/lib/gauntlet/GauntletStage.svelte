@@ -22,7 +22,15 @@
   const mode = $derived(String(presenter.payload.mode ?? 'arrows'))
   const showAt = $derived(Number(presenter.payload.showAt ?? 0))
   const closesAt = $derived(Number(presenter.payload.closesAt ?? 0))
-  const winner = $derived(presenter.payload.winner as { id: string; name: string } | undefined)
+  // A winner only counts here if it's THIS game's: mid-gauntlet, or a gauntlet crown.
+  // (Another game's crowned winner rides the winners payload too — ignore it.)
+  const winner = $derived.by(() => {
+    const w = presenter.payload.winner as { id: string; name: string } | undefined
+    if (!w) return undefined
+    if (presenter.phase === 'gauntlet') return w
+    if (presenter.phase === 'winners' && presenter.payload.from === 'gauntlet') return w
+    return undefined
+  })
   const crowned = $derived(presenter.phase === 'winners')
   const tiebreak = $derived(presenter.payload.tiebreak === true)
   const leaders = $derived(
@@ -92,8 +100,9 @@
   function crown() {
     if (!winner) return
     presenter.crown([winner.id])
-    // winner rides along so the post-crown control (podium/next) stays reachable
-    presenter.advance('winners', { survivors: [winner.id], winner })
+    // winner rides along (tagged) so the podium control stays reachable
+    // without leaking into other game slides
+    presenter.advance('winners', { survivors: [winner.id], winner, from: 'gauntlet' })
     airhorn()
   }
 
