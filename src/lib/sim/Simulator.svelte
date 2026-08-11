@@ -55,10 +55,13 @@
 
   // Presenter overrides: skip the wait when the whole room is already done.
   const connected = $derived(
-    presenter.players.filter((p) => (p as (typeof presenter.players)[0] & { connected?: boolean }).connected),
+    presenter.players.filter(
+      (p) => (p as (typeof presenter.players)[0] & { connected?: boolean }).connected && p.alive,
+    ),
   )
-  const allUploaded = $derived(connected.length > 0 && connected.every((p) => p.hasDrawing))
   const allReady = $derived(connected.length > 0 && connected.every((p) => p.ready))
+  /** Drawing can end early only when every phone pressed "I'm done" — unready re-blocks. */
+  const drawSkippable = $derived(drawRemaining === 0 || allReady)
 
   function reset() {
     si = 0
@@ -79,7 +82,7 @@
 
   function liveNext() {
     if (presenter.phase === 'tools') presenter.advance('drawing')
-    else if (presenter.phase === 'drawing' && (drawRemaining === 0 || allUploaded)) {
+    else if (presenter.phase === 'drawing' && drawSkippable) {
       presenter.advance('pick')
     } else if (presenter.phase === 'pick' && allReady) deck.next()
   }
@@ -123,7 +126,7 @@
       if (presenter.phase === 'tools') return 'start the 60s draw →'
       if (presenter.phase === 'drawing') {
         if (drawRemaining === 0) return 'to the picks →'
-        return allUploaded ? `everyone's done — picks →` : `drawing… ${drawRemaining}s`
+        return drawSkippable ? `everyone's done — picks →` : `drawing… ${drawRemaining}s`
       }
       if (presenter.phase === 'pick')
         return allReady ? 'everyone ready — arena →' : 'picks open ✓'
@@ -140,7 +143,7 @@
       (allShipped &&
         live &&
         ((presenter.phase === 'pick' && !allReady) ||
-          (presenter.phase === 'drawing' && drawRemaining !== 0 && !allUploaded))),
+          (presenter.phase === 'drawing' && !drawSkippable))),
   )
 </script>
 

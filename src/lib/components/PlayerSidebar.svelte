@@ -5,17 +5,16 @@
   const PHASES = ['drawing', 'pick']
 
   const visible = $derived(presenter.live && PHASES.includes(presenter.phase))
+  // Eliminated players spectate — they'd otherwise block the "all ready" count forever.
   const roster = $derived(
     presenter.players.filter(
-      (p) => (p as (typeof presenter.players)[0] & { connected?: boolean }).connected,
+      (p) => (p as (typeof presenter.players)[0] & { connected?: boolean }).connected && p.alive,
     ),
   )
 
   /** ✓ when the player finished what the current phase asks of them. */
-  const doneFor = (p: (typeof roster)[0]) => {
-    if (presenter.phase === 'drawing') return p.hasDrawing
-    return p.ready // pick
-  }
+  // ready is the phase's own signal: "I'm done" while drawing, pick+spawn locked while picking
+  const doneFor = (p: (typeof roster)[0]) => p.ready
 
   const doneCount = $derived(roster.filter((p) => doneFor(p) === true).length)
   const thumb = (id: string) => {
@@ -65,9 +64,12 @@
     border-radius: 0.6rem; opacity: 0.55;
   }
   .prow.done { opacity: 1; background: rgba(217, 119, 87, 0.07); }
-  .prow img, .pinit {
+  .prow img {
+    width: 1.7rem; height: 1.7rem; object-fit: contain; flex: 0 0 auto; /* raw drawing */
+  }
+  .pinit {
     width: 1.7rem; height: 1.7rem; border-radius: 50%; border: 1px solid var(--line);
-    background: #fff; object-fit: cover; flex: 0 0 auto;
+    background: #fff; flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
   }

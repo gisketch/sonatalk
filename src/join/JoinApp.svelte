@@ -51,10 +51,22 @@
     <div class="eyebrow">live</div>
     <p class="phone-title">You're in.</p>
     <p class="phone-note">Keep this open — things will start appearing here during the talk.</p>
-  {:else if phase === 'names' && !named}
+  {:else if ['names', 'canvas', 'tools', 'drawing', 'pick'].includes(phase) && !named}
+    <!-- The name gate can't be skipped: it stays until submitted, whatever has shipped since. -->
     <NameGate onsubmit={(name) => link.send({ type: 'setName', name })} />
   {:else if phase === 'canvas' || phase === 'tools' || phase === 'drawing'}
-    <DrawBoard {phase} {payload} {myId} name={me?.name ?? null} />
+    <DrawBoard
+      {phase}
+      {payload}
+      {myId}
+      name={me?.name ?? null}
+      ready={me?.ready ?? false}
+      onready={(ready) => link.send({ type: 'drawReady', ready })}
+    />
+  {:else if phase === 'pick' && (dead || me?.alive === false)}
+    <div class="bigmoji">💀</div>
+    <p class="phone-title">Eliminated!</p>
+    <p class="phone-note">The survivors are re-picking for the next round. Watch the big screen.</p>
   {:else if phase === 'pick' && me?.ready}
     <div class="bigmoji">{me.pick === 'rock' ? '🪨' : me.pick === 'paper' ? '📄' : '✂️'}</div>
     <p class="phone-title">Ready.</p>

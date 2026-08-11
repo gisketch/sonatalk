@@ -74,11 +74,13 @@ Total budget ~10 min with the game. Hotkeys: `N` notes · `F` fullscreen · `O` 
 
 ## 10 · The Arena — 2 min
 
-- "Your drawings. RPS rules. Collisions are fatal. Last team standing."
-- **Click "start the battle."** Then shut up and let the room react.
+- Button waits until **everyone picked + placed** (shows the ready count).
+- **Click "show players"** — everyone appears frozen where they placed themselves. Weapons stay secret. "Look where you all are…"
+- **Click "start the battle."** Weapons reveal, chaos. Then shut up and let the room react.
 - *(Rude drawing? Click the sprite. It just dies. Nobody knows.)*
 - Arena shrinks after 45s — always ends within ~90s.
-- Winner splash → **"crown the winners."** Name the survivors out loud.
+- **Multiple survivors = stand-off** → "next round — re-pick": survivors choose weapon + spawn again. Repeats until ONE champion.
+- "NAME wins!" splash → **"crown the winner."** Say their name out loud.
 
 ## 11 · The Reveal — 1 min ← land the thesis
 

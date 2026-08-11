@@ -8,11 +8,16 @@
     name,
     payload = {},
     myId = null,
+    ready = false,
+    onready,
   }: {
     phase: string
     name: string | null
     payload?: Record<string, unknown>
     myId?: string | null
+    /** server-mirrored "I'm done" flag — survives a phone reload */
+    ready?: boolean
+    onready?: (ready: boolean) => void
   } = $props()
 
   let canvas: Canvas
@@ -36,6 +41,18 @@
   $effect(() => {
     if (locked && !submitted) void upload()
   })
+
+  /** "I'm done" — uploads now so the deck can skip the timer once everyone's in. */
+  function readyUp() {
+    submitted = true
+    void upload()
+    onready?.(true)
+  }
+
+  function unready() {
+    submitted = false // timer-end auto-upload re-arms with the latest strokes
+    onready?.(false)
+  }
 
   async function upload() {
     submitted = true // single-shot; a failed upload just means spectating, by design
@@ -64,6 +81,9 @@
   {#if locked}
     <p class="phone-title">Submitted ✓</p>
     <p class="phone-note">Your character enters the arena. Watch the big screen.</p>
+  {:else if ready}
+    <p class="phone-title">Submitted ✓</p>
+    <p class="phone-note">Waiting for the room — or keep drawing until the timer runs out.</p>
   {:else}
     <p class="phone-title">
       {#if remaining !== null}
@@ -73,8 +93,8 @@
       {/if}
     </p>
   {/if}
-  <Canvas bind:this={canvas} {color} {brush} {mode} {locked} />
-  {#if toolsUnlocked && !locked}
+  <Canvas bind:this={canvas} {color} {brush} {mode} locked={locked || ready} />
+  {#if toolsUnlocked && !locked && !ready}
     <div use:fx={{ pop: true }}>
       <Tools
         bind:color
@@ -84,6 +104,13 @@
         onclear={() => canvas.clear()}
       />
     </div>
+  {/if}
+  {#if phase === 'drawing' && !locked}
+    {#if ready}
+      <button class="btn ghost" onclick={unready}>↺ keep drawing</button>
+    {:else}
+      <button class="btn" onclick={readyUp}>I'm done ✓</button>
+    {/if}
   {/if}
 </div>
 

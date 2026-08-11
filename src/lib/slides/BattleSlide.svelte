@@ -6,23 +6,17 @@
   import {
     ARENA_H, ARENA_W, createBattle, findWinner, step, type BattleState,
   } from '../battle/engine'
-  import { TEAM_EMOJI, TEAMS, type Team } from '../battle/rps'
+  import { TEAMS, type Team } from '../battle/rps'
+  import WinnerOverlay from '../battle/WinnerOverlay.svelte'
 
   const W = ARENA_W
   const H = ARENA_H
   const TICK_MS = 1000 / 30 // interval-driven, immune to rAF throttling
   const SPEEDS = Array.from({ length: 12 }, (_, i) => 0.25 * (i + 1)) // 0.25× … 3×
-  const IDLE_ANIMS = ['bounce', 'spin', 'sway', 'hop']
-  const CONFETTI = Array.from({ length: 44 }, (_, i) => ({
-    left: Math.random() * 100,
-    delay: Math.random() * 2.4,
-    duration: 2.6 + Math.random() * 2.2,
-    color: ['#D97757', '#C4633F', '#4A7A8C', '#6B8F5E', '#C9A227', '#262624'][i % 6],
-    tilt: Math.random() * 360,
-  }))
 
   let canvasEl: HTMLCanvasElement | undefined = $state()
   let battle: BattleState | null = $state.raw(null)
+  let preview = $state(false)
   let running = $state(false)
   let winner = $state<Team | null>(null)
   let survivors = $state<Array<{ id: string; name: string }>>([])
@@ -34,15 +28,22 @@
   const timeScale = $derived(SPEEDS[speedIdx])
 
   const live = $derived(presenter.live && !presenter.forceOffline)
-  const canStart = $derived(
-    live ? ['pick', 'battle'].includes(presenter.phase) && !running && !winner : !running,
+
+  // Sudden-death gate: only living, connected players pick each round.
+  const alivePickers = $derived(
+    presenter.players.filter(
+      (p) => (p as (typeof presenter.players)[0] & { connected?: boolean }).connected && p.alive,
+    ),
   )
+  const readyCount = $derived(alivePickers.filter((p) => p.ready).length)
+  const allReady = $derived(alivePickers.length > 0 && alivePickers.every((p) => p.ready))
 
   // Session reset clears the arena too — even mid-forceOffline.
   $effect(() => {
-    if (presenter.live && presenter.phase === 'lobby' && (battle || winner)) {
+    if (presenter.live && presenter.phase === 'lobby' && (battle || winner || preview)) {
       clearInterval(timer)
       running = false
+      preview = false
       battle = null
       winner = null
       survivors = []
@@ -52,7 +53,7 @@
   function contestants() {
     if (live) {
       return presenter.players
-        .filter((p) => p.pick)
+        .filter((p) => p.pick && p.alive)
         .map((p) => ({
           id: p.id, name: p.name ?? 'anon', team: p.pick as Team, spawn: p.spawn,
         }))
@@ -74,17 +75,50 @@
     }
   }
 
-  function start() {
+  /** Step 1: freeze everyone at their chosen spawn — weapons stay secret. */
+  function showPlayers() {
     const players = contestants()
     if (players.length === 0) return
-    if (live && presenter.phase === 'pick') presenter.advance('battle')
     loadImages()
     winner = null
     survivors = []
     battle = createBattle(players, W, H)
+    preview = true
+    clearInterval(timer)
+    // re-render as drawings finish loading; nothing moves until start()
+    timer = setInterval(() => {
+      if (canvasEl && battle) renderBattle(canvasEl.getContext('2d')!, battle, images, { hideTeams: true })
+    }, 350)
+  }
+
+  /** Step 2: reveal the teams and let them loose. */
+  function start() {
+    if (!battle || winner) {
+      // offline mock (incl. run-again), or deck-refresh recovery mid-battle-phase
+      const players = contestants()
+      if (players.length === 0) return
+      loadImages()
+      winner = null
+      survivors = []
+      battle = createBattle(players, W, H)
+    }
+    if (live && presenter.phase === 'pick') presenter.advance('battle')
+    preview = false
     running = true
+    clearInterval(timer)
     lastTick = performance.now()
     timer = setInterval(tick, TICK_MS)
+  }
+
+  /** More than one survivor: everyone standing re-picks weapon + spawn. */
+  function nextRound() {
+    clearInterval(timer)
+    winner = null
+    survivors = []
+    battle = null
+    preview = false
+    running = false
+    if (live) presenter.advance('pick')
   }
 
   function tick() {
@@ -112,7 +146,8 @@
     clearInterval(timer)
     winner = team
     survivors = battle!.entities.filter((e) => e.alive).map((e) => ({ id: e.id, name: e.name }))
-    if (live) presenter.crown(survivors.map((s) => s.id))
+    // No crowning yet — with >1 survivor the round repeats until a sole champion.
+    if (live && survivors.length === 1) presenter.crown(survivors.map((s) => s.id))
   }
 
   /** Kill-switch: presenter click removes a sprite, styled as a normal elimination. */
@@ -132,6 +167,8 @@
     if (live) presenter.advance('winners', { team: winner, survivors: survivors.map((s) => s.id) })
   }
 
+  const isChampion = $derived(!!winner && survivors.length === 1)
+
   onDestroy(() => clearInterval(timer))
 </script>
 
@@ -141,46 +178,30 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
   <canvas bind:this={canvasEl} width={W} height={H} onclick={arenaClick}></canvas>
   {#if winner}
-    <div class="winner-overlay" use:fx={{ pop: true }}>
-      <div class="confetti">
-        {#each CONFETTI as c, i (i)}
-          <span
-            style:left="{c.left}%"
-            style:background={c.color}
-            style:animation-delay="{c.delay}s"
-            style:animation-duration="{c.duration}s"
-            style:transform="rotate({c.tilt}deg)"
-          ></span>
-        {/each}
-      </div>
-      <div class="winner-emoji">{TEAM_EMOJI[winner]}</div>
-      <p class="winner-title">Team {winner} wins</p>
-      <div class="winner-crew">
-        {#each survivors as s, i (s.id)}
-          <figure
-            class="crew {IDLE_ANIMS[i % IDLE_ANIMS.length]}"
-            style:animation-duration="{1.3 + (i % 5) * 0.25}s"
-            style:animation-delay="{(i % 7) * 0.13}s"
-          >
-            {#if presenter.drawings[s.id] && presenter.drawings[s.id] !== 'pending'}
-              <img src={presenter.drawings[s.id]} alt={s.name} />
-            {:else}
-              <span class="crew-fallback">{TEAM_EMOJI[winner]}</span>
-            {/if}
-            <figcaption>{s.name}</figcaption>
-          </figure>
-        {/each}
-      </div>
-    </div>
+    <WinnerOverlay {winner} {survivors} {isChampion} />
   {/if}
 </div>
 <div class="arena-ctl">
-  {#if canStart}
-    <button class="btn" onclick={start}>{live ? 'start the battle →' : 'run mock battle →'}</button>
+  {#if live}
+    {#if winner}
+      {#if isChampion}
+        <button class="btn" onclick={toWinners}>crown the winner →</button>
+      {:else}
+        <button class="btn" onclick={nextRound}>next round — re-pick →</button>
+      {/if}
+    {:else if running}
+      <!-- speed control only -->
+    {:else if preview || presenter.phase === 'battle'}
+      <button class="btn" onclick={start}>start the battle →</button>
+    {:else if presenter.phase === 'pick'}
+      <button class="btn" disabled={!allReady} onclick={showPlayers}>
+        {allReady ? 'show players →' : `waiting… ${readyCount} / ${alivePickers.length} ready`}
+      </button>
+    {/if}
   {:else if winner}
-    <button class="btn" onclick={live ? toWinners : start}>
-      {live ? 'crown the winners →' : '↺ run again'}
-    </button>
+    <button class="btn" onclick={start}>↺ run again</button>
+  {:else if !running}
+    <button class="btn" onclick={start}>run mock battle →</button>
   {/if}
   {#if running}
     <div class="speedctl">
@@ -196,46 +217,6 @@
   canvas {
     width: 100%; height: 100%; object-fit: contain;
     background: var(--paper); border: 1px solid var(--line); border-radius: 1.2rem;
-  }
-  .winner-overlay {
-    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 0.6rem; background: rgba(250, 249, 245, 0.88);
-    border-radius: 1.2rem;
-  }
-  .winner-emoji { font-size: 3.4rem; }
-  .winner-title { font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 2.8rem); }
-
-  .winner-crew {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem;
-    margin-top: 0.8rem; max-width: 80%;
-  }
-  .crew { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
-  .crew img, .crew-fallback {
-    width: 4.6rem; height: 4.6rem; border-radius: 50%; border: 2px solid var(--ink);
-    background: #fff; object-fit: cover; display: flex; align-items: center;
-    justify-content: center; font-size: 2rem;
-  }
-  .crew figcaption { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-soft); }
-  .crew.bounce { animation: crewBounce infinite ease-in-out; }
-  .crew.spin { animation: crewSpin infinite linear; }
-  .crew.sway { animation: crewSway infinite ease-in-out; }
-  .crew.hop { animation: crewHop infinite cubic-bezier(0.3, 1.4, 0.5, 1); }
-  @keyframes crewBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
-  @keyframes crewSpin { to { transform: rotate(360deg); } }
-  @keyframes crewSway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
-  @keyframes crewHop { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-10px) scale(1.08); } 60% { transform: translateY(-4px) scale(0.98); } }
-
-  .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-  .confetti span {
-    position: absolute; top: -4%; width: 0.55rem; height: 0.9rem; border-radius: 0.15rem;
-    opacity: 0.9; animation-name: confettiFall; animation-iteration-count: infinite;
-    animation-timing-function: linear;
-  }
-  @keyframes confettiFall {
-    to { top: 104%; transform: rotate(720deg); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .crew, .confetti span { animation: none !important; }
   }
   .arena-ctl { display: flex; justify-content: center; align-items: center; gap: 1rem; padding-top: 0.8rem; }
   .speedctl { display: flex; align-items: center; gap: 0.55rem; }

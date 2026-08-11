@@ -1,7 +1,7 @@
 import { WebSocketServer } from 'ws'
 import {
-  DRAW_SECONDS, addPlayer, removePlayer, resetSession, setPhase, setName, setPick,
-  setReady, snapshot,
+  DRAW_SECONDS, addPlayer, removePlayer, resetSession, setDrawReady, setPhase, setName,
+  setPick, setReady, snapshot,
 } from './session.js'
 
 const HEARTBEAT_MS = 30_000 // keeps idle sockets alive through nginx proxy timeouts
@@ -48,6 +48,7 @@ export function attachWs(httpServer, session, presenterToken) {
 
       if (socket.role === 'phone') {
         if (msg.type === 'setName' && setName(session, socket.playerId, msg.name)) broadcast()
+        if (msg.type === 'drawReady' && setDrawReady(session, socket.playerId, msg.ready)) broadcast()
         if (msg.type === 'pick' && setPick(session, socket.playerId, msg.pick)) broadcast()
         if (msg.type === 'ready' && setReady(session, socket.playerId, msg.spawn)) broadcast()
         return
@@ -60,6 +61,15 @@ export function attachWs(httpServer, session, presenterToken) {
             msg.phase === 'drawing'
               ? { ...msg.payload, endsAt: Date.now() + DRAW_SECONDS * 1000 }
               : (msg.payload ?? {})
+          // Every pick round starts clean: no leaked draw-ready flags, and sudden-death
+          // re-rounds force survivors to choose weapon + spawn again.
+          if (msg.phase === 'pick') {
+            for (const player of session.players.values()) {
+              player.ready = false
+              player.pick = null
+              player.spawn = null
+            }
+          }
           if (setPhase(session, msg.phase, payload)) broadcast()
         }
         if (msg.type === 'eliminate') {

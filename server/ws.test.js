@@ -57,6 +57,24 @@ describe('ws roles', () => {
     fake.socket.close()
   })
 
+  it('advancing to pick clears draw-phase ready flags', async () => {
+    const presenter = await client({ role: 'presenter', token: TOKEN })
+    const phone = await client({ role: 'phone' })
+    send(presenter.socket, { type: 'advance', phase: 'drawing' })
+    await wait()
+    send(phone.socket, { type: 'drawReady', ready: true })
+    await wait()
+    expect([...session.players.values()][0].ready).toBe(true)
+    send(presenter.socket, { type: 'advance', phase: 'pick' })
+    await wait()
+    const player = [...session.players.values()][0]
+    expect(player.ready).toBe(false)
+    expect(player.pick).toBe(null) // re-rounds force a fresh weapon + spawn choice
+    expect(player.spawn).toBe(null)
+    presenter.socket.close()
+    phone.socket.close()
+  })
+
   it('presenter reset wipes the roster and kicks every phone', async () => {
     const presenter = await client({ role: 'presenter', token: TOKEN })
     const phone = await client({ role: 'phone' })

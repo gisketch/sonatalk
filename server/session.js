@@ -59,15 +59,23 @@ export function setName(session, id, name) {
 export function setPick(session, id, pick) {
   const player = session.players.get(id)
   if (!player || !['rock', 'paper', 'scissors'].includes(pick)) return false
-  if (session.phase !== 'pick') return false
+  if (session.phase !== 'pick' || !player.alive) return false // eliminated players spectate
   player.pick = pick
+  return true
+}
+
+/** "I'm done" toggle during the 60s draw. Cleared when picks open (pick re-readies). */
+export function setDrawReady(session, id, ready) {
+  const player = session.players.get(id)
+  if (!player || session.phase !== 'drawing') return false
+  player.ready = ready === true
   return true
 }
 
 /** Ready = pick locked + spawn chosen (normalized 0..1 coords). Pick phase only. */
 export function setReady(session, id, spawn) {
   const player = session.players.get(id)
-  if (!player || session.phase !== 'pick' || !player.pick) return false
+  if (!player || session.phase !== 'pick' || !player.pick || !player.alive) return false
   const x = Number(spawn?.x)
   const y = Number(spawn?.y)
   if (!Number.isFinite(x) || !Number.isFinite(y)) return false

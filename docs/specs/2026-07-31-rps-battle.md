@@ -70,6 +70,12 @@ experience was one harness-built application.
   pick + phone-chosen spawn position (mini arena map, normalized coords) + READY button.
   Deck shows "N ready / M connected" plus who's not ready (bottom-left, never over CTAs);
   battle slide has a playback speed control (0.5×–3×) with visible multiplier.
+- v3 (post-dry-run): two-step launch — "show players" renders everyone frozen at their chosen
+  spawn with weapons hidden (neutral render), then "start" reveals teams and begins motion.
+  Sudden death: the battle repeats until exactly one survivor — if a round ends with >1 alive
+  (same team), survivors re-pick weapon + spawn (server wipes pick/spawn/ready on each `pick`
+  advance; eliminated players are locked out of picking and spectate). Only the sole champion
+  is crowned. Deck pick counts stay anonymized ("✊ N picked") so teams can't be countered.
 - Sim determinism is not required (no replay); but the RPS resolution function must be pure and
   unit-tested — it is the one piece of game logic with a wrong answer.
 - Battle slide slots between the simulator slide and "Start tiny"; reveal replaces/extends the

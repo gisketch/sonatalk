@@ -70,7 +70,7 @@ export const slides: SlideDef[] = [
   {
     component: BattleSlide,
     notes:
-      "2 min. Wait for picks to settle (team counts in the live bar), then start the battle. Clicking a sprite eliminates it — that's the moderation kill-switch, use it casually. Battle self-accelerates after 45s and always ends by ~90s. Crown the winners, soak the moment, then next click.",
+      "2 min. Button unlocks when everyone picked + placed. 'Show players' freezes them at their spawns — weapons secret. 'Start' reveals teams and they move. Clicking a sprite eliminates it — moderation kill-switch, use casually. Self-accelerates after 45s, ends by ~90s. Multiple survivors = stand-off → next round, survivors re-pick, until ONE champion. Then crown.",
   },
   {
     component: RevealSlide,

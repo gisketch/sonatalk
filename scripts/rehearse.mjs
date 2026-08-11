@@ -61,14 +61,18 @@ function spawnPhone(i) {
       if (res.ok) stats.uploaded++
       else console.log(`  ✗ upload rejected for ${name}: ${res.status}`)
     }
+    if (msg.phase === 'battle') phone.picked = false // re-arm for sudden-death re-picks
     if (msg.phase === 'pick' && !phone.picked) {
       phone.picked = true
-      stats.picked++
-      ws.send(JSON.stringify({ type: 'pick', pick: PICKS[i % 3] }))
-      // choose a spawn spread across the arena and lock in
-      const spawn = { x: 0.1 + ((i * 0.79) % 0.8), y: 0.1 + ((i * 0.37) % 0.8) }
-      ws.send(JSON.stringify({ type: 'ready', spawn }))
-      stats.ready = (stats.ready ?? 0) + 1
+      const self = msg.players.find((p) => p.id === phone.id)
+      if (self?.alive) {
+        stats.picked++
+        ws.send(JSON.stringify({ type: 'pick', pick: PICKS[Math.floor(Math.random() * 3)] }))
+        // choose a spawn spread across the arena and lock in
+        const spawn = { x: 0.1 + ((i * 0.79) % 0.8), y: 0.1 + ((i * 0.37) % 0.8) }
+        ws.send(JSON.stringify({ type: 'ready', spawn }))
+        stats.ready = (stats.ready ?? 0) + 1
+      }
     }
     if (msg.phase === 'reveal') finish('reveal reached')
   })

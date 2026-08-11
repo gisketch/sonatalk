@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  addPlayer, createSession, drawingOpen, resetSession, setName, setPhase, setPick, setReady,
+  addPlayer, createSession, drawingOpen, resetSession, setDrawReady, setName, setPhase,
+  setPick, setReady,
 } from './session.js'
 
 describe('session', () => {
@@ -70,6 +71,19 @@ describe('session', () => {
     expect(s.payload).toEqual({})
   })
 
+  it('drawReady toggles only during the drawing phase', () => {
+    const s = createSession()
+    const p = addPlayer(s)
+    expect(setDrawReady(s, p.id, true)).toBe(false) // wrong phase
+    setPhase(s, 'drawing', { endsAt: 1 })
+    expect(setDrawReady(s, p.id, true)).toBe(true)
+    expect(p.ready).toBe(true)
+    expect(setDrawReady(s, p.id, false)).toBe(true)
+    expect(p.ready).toBe(false)
+    expect(setDrawReady(s, p.id, 'yes')).toBe(true) // non-boolean coerces to false
+    expect(p.ready).toBe(false)
+  })
+
   it('only accepts picks during the pick phase', () => {
     const s = createSession()
     const p = addPlayer(s)
@@ -77,5 +91,15 @@ describe('session', () => {
     setPhase(s, 'pick')
     expect(setPick(s, p.id, 'rock')).toBe(true)
     expect(setPick(s, p.id, 'lizard')).toBe(false)
+  })
+
+  it('eliminated players cannot pick or ready in later rounds', () => {
+    const s = createSession()
+    const p = addPlayer(s)
+    setPhase(s, 'pick')
+    p.alive = false
+    expect(setPick(s, p.id, 'rock')).toBe(false)
+    p.pick = 'rock' // even with a stale pick, ready is refused
+    expect(setReady(s, p.id, { x: 0.5, y: 0.5 })).toBe(false)
   })
 })
