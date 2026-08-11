@@ -20,7 +20,8 @@
 
 <div class="diagram-area">
   <!-- SVG internals keep the reference's CSS fx/pop classes; SMIL drives the traveling pulses -->
-  <svg viewBox="0 0 1000 400" font-family="Inter, sans-serif">
+  <!-- viewBox crops the ~100 units of dead space above the FEEDFORWARD label -->
+  <svg viewBox="0 104 1000 296" font-family="Inter, sans-serif">
     <defs>
       <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#D97757"/></marker>
       <marker id="arrInk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#7A776E"/></marker>
