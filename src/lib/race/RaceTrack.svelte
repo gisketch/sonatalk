@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fx } from '../fx'
+  import LagControl from '../components/LagControl.svelte'
   import { presenter } from '../net/presenter.svelte'
 
   let now = $state(Date.now())
@@ -115,6 +116,7 @@
   {:else}
     <span class="race-note">first to {TARGET} steps — alternate taps!</span>
   {/if}
+  <LagControl />
 </div>
 
 <style>

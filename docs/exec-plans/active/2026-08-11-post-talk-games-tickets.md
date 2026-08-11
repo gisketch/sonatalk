@@ -70,5 +70,7 @@ Sensor catch during build: phones kept local dead/champion flags across rematche
 revived player would have stayed on the Eliminated screen. Fixed by syncing to snapshot
 truth (alive) and clearing the crown when a new pick round opens.
 
-Games 2–3: no tickets until formats are decided (spec's open question). They inherit G1's
-rematch loop and the one-winner invariant as-is.
+Game 2 (the sprint) and game 3 (the gauntlet) were specced and built after this file:
+see specs 2026-08-11-race-game.md and 2026-08-11-gauntlet.md. Both inherit the rematch
+loop and the one-winner invariant; both compensate for AirPlay display lag via the
+presenter's TV-delay offset.

@@ -15,6 +15,7 @@ import StartTinySlide from './slides/StartTinySlide.svelte'
 import ClosingSlide from './slides/ClosingSlide.svelte'
 import GameSlide from './slides/GameSlide.svelte'
 import RaceSlide from './slides/RaceSlide.svelte'
+import GauntletSlide from './slides/GauntletSlide.svelte'
 
 export interface SlideDef {
   component: Component
@@ -103,6 +104,11 @@ export const slides: SlideDef[] = [
   {
     component: RaceSlide,
     notes:
-      "POST-TALK GAME 2. The sprint: everyone lines up at the bottom, first to 50 alternating steps wins. 'Start the race' = synced 3-2-1 on all phones, then GO. Same-foot taps stumble (shake, no step). First to the line freezes the race → crown = game-2 champion recorded. '↺ race again' for reruns. Champions strip top-right shows the rewards record.",
+      "POST-TALK GAME 2. The sprint: everyone lines up at the bottom, first to 150 alternating steps wins. 'Start the race' = synced 3-2-1 on all phones, then GO. Same-foot taps stumble (locked pads + shake). First to the line freezes the race → crown = game-2 champion recorded. Set TV DELAY once so the countdown matches the AirPlayed screen.",
+  },
+  {
+    component: GauntletSlide,
+    notes:
+      "POST-TALK GAME 3 — the finale, best prize. Rapid commands on THIS screen (phones are blind pads): TAP LEFT/RIGHT, TAP TWICE, DON'T TAP, quick math, logic, color tricks. Wrong or slow = out; a full-wipe round kills nobody. Presenter clicks each 'next command' — milk the beats. Window shrinks every round until ONE survives → crown. TV DELAY control keeps the window fair over AirPlay.",
   },
 ]

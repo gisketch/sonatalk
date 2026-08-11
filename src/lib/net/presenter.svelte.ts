@@ -17,6 +17,11 @@ class Presenter {
   drawings = $state<Record<string, string>>({})
   /** mirror: per-game winners — the rewards record */
   champions = $state<Champion[]>([])
+  /**
+   * AirPlay compensation: how far the TV lags the server, presenter-calibrated.
+   * Timing games shift their windows by this so the TV's clock is the fair one.
+   */
+  displayLagMs = $state(Number(localStorage.getItem('displayLagMs') ?? 1000))
 
   #send: ((obj: Record<string, unknown>) => void) | null = null
 
@@ -76,8 +81,19 @@ class Presenter {
     return this.players.filter((p) => (p as PlayerInfo & { connected?: boolean }).connected).length
   }
 
+  setDisplayLag(ms: number) {
+    this.displayLagMs = Math.min(5_000, Math.max(0, ms))
+    localStorage.setItem('displayLagMs', String(this.displayLagMs))
+  }
+
   advance(phase: string, payload: Record<string, unknown> = {}) {
+    if (phase === 'race') payload = { ...payload, displayLagMs: this.displayLagMs }
     this.#send?.({ type: 'advance', phase, payload })
+  }
+
+  /** One click runs the whole gauntlet: server auto-loops rounds until a winner. */
+  gauntletStart() {
+    this.#send?.({ type: 'gauntletStart', displayLagMs: this.displayLagMs })
   }
 
   eliminate(playerId: string) {

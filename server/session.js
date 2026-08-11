@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto'
 
 /** Phase order is the talk's arc; server only validates known phases, order is presenter-driven. */
 export const PHASES = [
-  'lobby', 'names', 'canvas', 'tools', 'drawing', 'pick', 'battle', 'winners', 'reveal', 'race',
+  'lobby', 'names', 'canvas', 'tools', 'drawing', 'pick', 'battle', 'winners', 'reveal',
+  'race', 'gauntlet',
 ]
 
 /** In-memory session — the app lives for one talk; restart = fresh session. */
@@ -23,7 +24,7 @@ export function createSession() {
 export function addPlayer(session) {
   const player = {
     id: randomUUID(), name: null, pick: null, alive: true, hasDrawing: false,
-    ready: false, spawn: null, steps: 0, foot: null,
+    ready: false, spawn: null, steps: 0, foot: null, score: 0,
   }
   session.players.set(player.id, player)
   return player
@@ -88,8 +89,12 @@ export function rematchSession(session) {
 export const RACE_STEPS = 150
 export const RACE_COUNTDOWN_MS = 3_500
 
-/** Everyone races: revive all, zero progress, stamp the synchronized GO time. */
-export function startRace(session, now) {
+/**
+ * Everyone races: revive all, zero progress, stamp the synchronized GO time.
+ * displayLagMs delays GO so the AirPlayed TV's countdown and the phones' agree.
+ */
+export function startRace(session, now, displayLagMs = 0) {
+  const lag = Math.min(5_000, Math.max(0, Number(displayLagMs) || 0))
   for (const player of session.players.values()) {
     player.alive = true
     player.pick = null
@@ -100,7 +105,7 @@ export function startRace(session, now) {
   }
   session.phase = 'race'
   // target travels in the payload so clients never hardcode the step count
-  session.payload = { startsAt: now + RACE_COUNTDOWN_MS, target: RACE_STEPS }
+  session.payload = { startsAt: now + RACE_COUNTDOWN_MS + lag, target: RACE_STEPS }
 }
 
 /**
@@ -162,7 +167,7 @@ export function snapshot(session) {
     champions: session.champions,
     players: [...session.players.values()].map((p) => ({
       id: p.id, name: p.name, pick: p.pick, alive: p.alive, hasDrawing: p.hasDrawing,
-      ready: p.ready, spawn: p.spawn, steps: p.steps,
+      ready: p.ready, spawn: p.spawn, steps: p.steps, score: p.score,
     })),
   }
 }

@@ -11,6 +11,8 @@ export interface PlayerInfo {
   spawn: { x: number; y: number } | null
   /** race progress — each valid alternating tap adds 0.5 */
   steps: number
+  /** gauntlet score — correct answers this game */
+  score: number
 }
 
 export interface Champion {

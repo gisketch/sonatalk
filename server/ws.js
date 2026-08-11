@@ -3,6 +3,9 @@ import {
   DRAW_SECONDS, addPlayer, raceTap, rematchSession, removePlayer, resetSession,
   setDrawReady, setPhase, setName, setPick, setReady, snapshot, startRace,
 } from './session.js'
+import {
+  RESULTS_BEAT_MS, RESULTS_GRACE_MS, beginRound, recordTap, resolveRound, startGauntlet,
+} from './gauntlet.js'
 
 const HEARTBEAT_MS = 30_000 // keeps idle sockets alive through nginx proxy timeouts
 const RACE_BROADCAST_MS = 120 // tap storm control: ~8 snapshots/s instead of per-tap
@@ -16,6 +19,8 @@ export function attachWs(httpServer, session, presenterToken) {
       if (client.readyState === client.OPEN && client.role) client.send(msg)
     }
   }
+
+  let gauntletTimer = null
 
   // Race taps mark dirty; a slow timer flushes, so 18 fast tappers can't storm the wire.
   let raceDirty = false
@@ -66,6 +71,8 @@ export function attachWs(httpServer, session, presenterToken) {
           if (result === 'win') broadcast() // the finish is never throttled
           else if (result) raceDirty = true
         }
+        // gauntlet taps are logged silently; the round's resolution broadcast reveals all
+        if (msg.type === 'gauntletTap') recordTap(session, socket.playerId, msg.side, Date.now())
         return
       }
 
@@ -99,10 +106,36 @@ export function attachWs(httpServer, session, presenterToken) {
               session.champions.push({ id: ids[0], name })
             }
           }
+          clearTimeout(gauntletTimer) // any phase move stops a running gauntlet loop
           if (msg.phase === 'race') {
-            startRace(session, Date.now())
+            startRace(session, Date.now(), msg.payload?.displayLagMs)
+            broadcast()
+          } else if (msg.phase === 'gauntlet') {
+            startGauntlet(session)
             broadcast()
           } else if (setPhase(session, msg.phase, payload)) broadcast()
+        }
+        // One click starts the whole game: rounds auto-run (prompt → resolve → beat → next)
+        // until a winner exists. Score attack — nobody is eliminated mid-game.
+        if (msg.type === 'gauntletStart' && session.phase === 'gauntlet' && !session.payload.winner) {
+          const lag = msg.displayLagMs
+          const runRound = () => {
+            if (session.phase !== 'gauntlet' || session.payload.winner) return
+            beginRound(session, Date.now(), lag)
+            broadcast()
+            const wait = session.payload.closesAt - Date.now() + RESULTS_GRACE_MS + 50
+            gauntletTimer = setTimeout(() => {
+              if (session.phase !== 'gauntlet') return
+              const connectedIds = new Set(
+                [...wss.clients].filter((c) => c.playerId && c.readyState === c.OPEN).map((c) => c.playerId),
+              )
+              const { winner } = resolveRound(session, connectedIds)
+              broadcast()
+              if (!winner) gauntletTimer = setTimeout(runRound, RESULTS_BEAT_MS)
+            }, wait)
+          }
+          clearTimeout(gauntletTimer)
+          runRound()
         }
         if (msg.type === 'rematch') {
           rematchSession(session)
@@ -120,6 +153,7 @@ export function attachWs(httpServer, session, presenterToken) {
           for (const id of msg.survivors) sendTo(id, { type: 'winner' })
         }
         if (msg.type === 'reset') {
+          clearTimeout(gauntletTimer)
           resetSession(session)
           for (const client of wss.clients) {
             if (client.readyState !== client.OPEN || !client.role) continue
@@ -154,6 +188,7 @@ export function attachWs(httpServer, session, presenterToken) {
   wss.on('close', () => {
     clearInterval(heartbeat)
     clearInterval(raceFlush)
+    clearTimeout(gauntletTimer)
   })
 
   return { wss, broadcast }

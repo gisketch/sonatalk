@@ -103,6 +103,25 @@ function spawnPhone(i) {
       phone.raceTimer = null
       phone.racing = false
     }
+    // game 3: bots obey randomly — one tap on a random side, 20% freeze (survives DON'T TAP)
+    if (msg.phase === 'gauntlet' && msg.payload.state === 'prompt') {
+      const key = `${msg.payload.round}`
+      if (phone.gauntletRound !== key) {
+        phone.gauntletRound = key
+        const self = msg.players.find((p) => p.id === phone.id)
+        if (self?.alive && Math.random() > 0.2) {
+          // humans tap after the TV shows the prompt — schedule relative to showAt
+          const showIn = Math.max(0, Number(msg.payload.showAt ?? 0) - Date.now())
+          const wait = showIn + 150 + Math.random() * 600
+          setTimeout(() => {
+            ws.send(JSON.stringify({ type: 'gauntletTap', side: Math.random() < 0.5 ? 'left' : 'right' }))
+            if (Math.random() < 0.25) {
+              ws.send(JSON.stringify({ type: 'gauntletTap', side: Math.random() < 0.5 ? 'left' : 'right' }))
+            }
+          }, wait)
+        }
+      }
+    }
     // no exit on reveal — post-talk games (rematch) continue after it; Ctrl+C or 5min timeout ends the run
   })
 

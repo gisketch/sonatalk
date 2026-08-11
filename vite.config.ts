@@ -11,6 +11,7 @@ export default defineConfig({
         join: resolve(import.meta.dirname, 'join.html'),
         sonataTalk: resolve(import.meta.dirname, 'sonata-talk.html'),
         racing: resolve(import.meta.dirname, 'racing.html'),
+        gauntlet: resolve(import.meta.dirname, 'gauntlet.html'),
       },
     },
   },

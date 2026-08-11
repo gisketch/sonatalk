@@ -120,9 +120,22 @@ Total budget ~10 min with the game. Hotkeys: `N` notes · `F` fullscreen · `O` 
 
 ## 16 · Game 2 — The Sprint (post-talk)
 
+- **Set TV DELAY first** (once): step it until the TV's 3·2·1 matches the phones' buzz.
 - "Phones are now running shoes. LEFT-RIGHT-LEFT-RIGHT. Same foot twice = stumble."
-- **Click "start the race."** 3·2·1 syncs on every phone. First to 50 steps wins.
+- **Click "start the race."** 3·2·1 syncs on every phone. First to 150 steps wins.
 - Winner freezes the race → **crown** → recorded. `↺ race again` if the room demands it.
+
+## 17 · Game 3 — The Gauntlet (post-talk finale)
+
+- "Best prize. Obey THIS screen. Every correct answer scores. The round NOBODY gets
+  right ends the game — top score takes the prize."
+- Phones: commands = arrow pads (spam away on TAP TWICE), questions = **green YES /
+  red NO** — first tap locks in.
+- **One click ("start") — it runs itself.** You just narrate the carnage.
+- Commands: TAP LEFT/RIGHT/TWICE, DON'T TAP, quick math, logic, color tricks
+  (read the INK, not the word). Windows shrink every round.
+- Tie at the end → SUDDEN DEATH among the leaders, everyone else watches.
+- Winner → **crown the champion** → hand over the big prize.
 
 ---
 
