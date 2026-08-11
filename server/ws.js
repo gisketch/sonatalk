@@ -1,10 +1,11 @@
 import { WebSocketServer } from 'ws'
 import {
-  DRAW_SECONDS, addPlayer, removePlayer, resetSession, setDrawReady, setPhase, setName,
-  setPick, setReady, snapshot,
+  DRAW_SECONDS, addPlayer, raceTap, rematchSession, removePlayer, resetSession,
+  setDrawReady, setPhase, setName, setPick, setReady, snapshot, startRace,
 } from './session.js'
 
 const HEARTBEAT_MS = 30_000 // keeps idle sockets alive through nginx proxy timeouts
+const RACE_BROADCAST_MS = 120 // tap storm control: ~8 snapshots/s instead of per-tap
 
 export function attachWs(httpServer, session, presenterToken) {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' })
@@ -15,6 +16,15 @@ export function attachWs(httpServer, session, presenterToken) {
       if (client.readyState === client.OPEN && client.role) client.send(msg)
     }
   }
+
+  // Race taps mark dirty; a slow timer flushes, so 18 fast tappers can't storm the wire.
+  let raceDirty = false
+  const raceFlush = setInterval(() => {
+    if (raceDirty) {
+      raceDirty = false
+      broadcast()
+    }
+  }, RACE_BROADCAST_MS)
 
   const sendTo = (playerId, obj) => {
     for (const client of wss.clients) {
@@ -51,6 +61,11 @@ export function attachWs(httpServer, session, presenterToken) {
         if (msg.type === 'drawReady' && setDrawReady(session, socket.playerId, msg.ready)) broadcast()
         if (msg.type === 'pick' && setPick(session, socket.playerId, msg.pick)) broadcast()
         if (msg.type === 'ready' && setReady(session, socket.playerId, msg.spawn)) broadcast()
+        if (msg.type === 'raceTap') {
+          const result = raceTap(session, socket.playerId, msg.side, Date.now())
+          if (result === 'win') broadcast() // the finish is never throttled
+          else if (result) raceDirty = true
+        }
         return
       }
 
@@ -70,7 +85,28 @@ export function attachWs(httpServer, session, presenterToken) {
               player.spawn = null
             }
           }
-          if (setPhase(session, msg.phase, payload)) broadcast()
+          // Crowning a sole survivor is THE one place a game champion is recorded —
+          // RPS and the race both funnel through it, so one-winner stays structural.
+          if (msg.phase === 'winners' && session.phase !== 'winners') {
+            const ids = Array.isArray(payload.survivors) ? payload.survivors : []
+            if (ids.length === 1) {
+              // The race payload froze the winner's name — it survives a disconnect.
+              const frozen = session.payload.winner
+              const name =
+                session.players.get(ids[0])?.name ??
+                (frozen?.id === ids[0] ? frozen.name : null) ??
+                'anon'
+              session.champions.push({ id: ids[0], name })
+            }
+          }
+          if (msg.phase === 'race') {
+            startRace(session, Date.now())
+            broadcast()
+          } else if (setPhase(session, msg.phase, payload)) broadcast()
+        }
+        if (msg.type === 'rematch') {
+          rematchSession(session)
+          broadcast()
         }
         if (msg.type === 'eliminate') {
           const player = session.players.get(msg.playerId)
@@ -115,7 +151,10 @@ export function attachWs(httpServer, session, presenterToken) {
       client.ping()
     }
   }, HEARTBEAT_MS)
-  wss.on('close', () => clearInterval(heartbeat))
+  wss.on('close', () => {
+    clearInterval(heartbeat)
+    clearInterval(raceFlush)
+  })
 
   return { wss, broadcast }
 }

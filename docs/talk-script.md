@@ -112,6 +112,18 @@ Total budget ~10 min with the game. Hotkeys: `N` notes · `F` fullscreen · `O` 
 - "Salamat! — questions?"
 - *(If someone asks "could this work team-wide?" — that's the seed. Smile.)*
 
+## 15 · Game 1 — RPS Rematch (post-talk)
+
+- "Rewards time. Same characters. One champion per game."
+- **Click "rematch — new game."** Everyone revives, phones re-pick. QR in the corner for stragglers (they name + draw, no timer — gate waits for them).
+- Same arena flow; sudden death until ONE stands. **Crown = recorded** (👑 strip, top right).
+
+## 16 · Game 2 — The Sprint (post-talk)
+
+- "Phones are now running shoes. LEFT-RIGHT-LEFT-RIGHT. Same foot twice = stumble."
+- **Click "start the race."** 3·2·1 syncs on every phone. First to 50 steps wins.
+- Winner freezes the race → **crown** → recorded. `↺ race again` if the room demands it.
+
 ---
 
 ## Panic card

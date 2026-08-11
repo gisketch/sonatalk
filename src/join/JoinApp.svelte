@@ -5,6 +5,7 @@
   import DrawBoard from './DrawBoard.svelte'
   import NameGate from './NameGate.svelte'
   import PickRPS from './PickRPS.svelte'
+  import Race from './Race.svelte'
 
   let phase = $state('lobby')
   let payload = $state<Record<string, unknown>>({})
@@ -30,6 +31,10 @@
         phase = msg.phase
         payload = msg.payload
         players = msg.players
+        // Server truth wins: a rematch revives this phone even if it died last game.
+        const self = msg.players.find((p) => p.id === myId)
+        if (self) dead = !self.alive
+        if (msg.phase === 'pick') champion = false // new game — old crown comes off
       }
     },
     (o) => (open = o),
@@ -51,9 +56,26 @@
     <div class="eyebrow">live</div>
     <p class="phone-title">You're in.</p>
     <p class="phone-note">Keep this open — things will start appearing here during the talk.</p>
-  {:else if ['names', 'canvas', 'tools', 'drawing', 'pick'].includes(phase) && !named}
+  {:else if ['names', 'canvas', 'tools', 'drawing', 'pick', 'race'].includes(phase) && !named}
     <!-- The name gate can't be skipped: it stays until submitted, whatever has shipped since. -->
     <NameGate onsubmit={(name) => link.send({ type: 'setName', name })} />
+  {:else if (phase === 'pick' || phase === 'race') && me && !me.hasDrawing}
+    <!-- late joiner: untimed character draw before entering the game -->
+    <DrawBoard phase="onboard" {myId} name={me?.name ?? null} />
+  {:else if phase === 'race'}
+    <Race
+      {payload}
+      {myId}
+      steps={me?.steps ?? 0}
+      hasDrawing={me?.hasDrawing ?? false}
+      winnerName={(payload.winner as { id: string; name: string } | undefined)?.name ?? null}
+      winnerAvatar={(() => {
+        const w = payload.winner as { id: string } | undefined
+        return w && players.find((p) => p.id === w.id)?.hasDrawing ? `/api/drawing/${w.id}` : null
+      })()}
+      isWinner={(payload.winner as { id: string } | undefined)?.id === myId}
+      ontap={(side) => link.send({ type: 'raceTap', side })}
+    />
   {:else if phase === 'canvas' || phase === 'tools' || phase === 'drawing'}
     <DrawBoard
       {phase}

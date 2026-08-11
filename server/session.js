@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 /** Phase order is the talk's arc; server only validates known phases, order is presenter-driven. */
 export const PHASES = [
-  'lobby', 'names', 'canvas', 'tools', 'drawing', 'pick', 'battle', 'winners', 'reveal',
+  'lobby', 'names', 'canvas', 'tools', 'drawing', 'pick', 'battle', 'winners', 'reveal', 'race',
 ]
 
 /** In-memory session — the app lives for one talk; restart = fresh session. */
@@ -15,13 +15,15 @@ export function createSession() {
     players: new Map(),
     /** id -> Buffer (PNG) — uploaded drawings, T7 */
     drawings: new Map(),
+    /** ordered game winners [{ id, name }] — the rewards record; only Shift+R clears it */
+    champions: [],
   }
 }
 
 export function addPlayer(session) {
   const player = {
     id: randomUUID(), name: null, pick: null, alive: true, hasDrawing: false,
-    ready: false, spawn: null,
+    ready: false, spawn: null, steps: 0, foot: null,
   }
   session.players.set(player.id, player)
   return player
@@ -38,6 +40,7 @@ export function resetSession(session) {
   session.payload = {}
   session.players.clear()
   session.drawings.clear()
+  session.champions = []
 }
 
 export function setPhase(session, phase, payload = {}) {
@@ -61,6 +64,62 @@ export function setPick(session, id, pick) {
   if (!player || !['rock', 'paper', 'scissors'].includes(pick)) return false
   if (session.phase !== 'pick' || !player.alive) return false // eliminated players spectate
   player.pick = pick
+  return true
+}
+
+/**
+ * New game, same characters: everyone revives and re-picks. Names and drawings are kept.
+ * Contrast with the sudden-death pick advance, which must keep eliminated players dead.
+ */
+export function rematchSession(session) {
+  session.payload = {}
+  for (const player of session.players.values()) {
+    player.alive = true
+    player.pick = null
+    player.spawn = null
+    player.ready = false
+    player.steps = 0
+    player.foot = null
+  }
+  session.phase = 'pick'
+}
+
+/** Game 2 — the sprint. Steps to the finish line; each valid alternating tap = half a step. */
+export const RACE_STEPS = 150
+export const RACE_COUNTDOWN_MS = 3_500
+
+/** Everyone races: revive all, zero progress, stamp the synchronized GO time. */
+export function startRace(session, now) {
+  for (const player of session.players.values()) {
+    player.alive = true
+    player.pick = null
+    player.spawn = null
+    player.ready = false
+    player.steps = 0
+    player.foot = null
+  }
+  session.phase = 'race'
+  // target travels in the payload so clients never hardcode the step count
+  session.payload = { startsAt: now + RACE_COUNTDOWN_MS, target: RACE_STEPS }
+}
+
+/**
+ * One tap. Server is the authority: GO-gated, dead players and finished races excluded,
+ * and sides must alternate (first tap may be either). Returns 'win' | true | false.
+ */
+export function raceTap(session, id, side, now) {
+  const player = session.players.get(id)
+  if (!player || session.phase !== 'race' || !player.alive) return false
+  if (!['left', 'right'].includes(side)) return false
+  if (session.payload.winner) return false
+  if (now < Number(session.payload.startsAt ?? Infinity)) return false
+  if (player.foot === side) return false // same foot twice — no step
+  player.foot = side
+  player.steps += 0.5
+  if (player.steps >= RACE_STEPS) {
+    session.payload = { ...session.payload, winner: { id: player.id, name: player.name ?? 'anon' } }
+    return 'win'
+  }
   return true
 }
 
@@ -100,9 +159,10 @@ export function snapshot(session) {
     type: 'snapshot',
     phase: session.phase,
     payload: session.payload,
+    champions: session.champions,
     players: [...session.players.values()].map((p) => ({
       id: p.id, name: p.name, pick: p.pick, alive: p.alive, hasDrawing: p.hasDrawing,
-      ready: p.ready, spawn: p.spawn,
+      ready: p.ready, spawn: p.spawn, steps: p.steps,
     })),
   }
 }

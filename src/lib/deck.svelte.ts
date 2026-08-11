@@ -48,7 +48,7 @@ class Deck {
   }
 
   static CLICK_GUARDS =
-    '.notes, .hud, .sim-wrap, .arena-wrap, .arena-ctl, .reveal-wrap, .reveal-ctl, .tree-wrap, .livebar, .player-rail'
+    '.notes, .hud, .sim-wrap, .arena-wrap, .arena-ctl, .reveal-wrap, .reveal-ctl, .tree-wrap, .livebar, .player-rail, .game-qr, .race-wrap, .race-ctl, .champs'
 
   handleClick(e: MouseEvent) {
     const t = e.target as Element

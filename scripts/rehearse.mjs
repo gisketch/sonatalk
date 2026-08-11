@@ -66,6 +66,16 @@ function spawnPhone(i) {
       phone.picked = true
       const self = msg.players.find((p) => p.id === phone.id)
       if (self?.alive) {
+        // late joiner (games mode): first upload is allowed outside the drawing window
+        if (!phone.uploaded && phone.id) {
+          phone.uploaded = true
+          const png = await QRCode.toBuffer(name, { width: 256, margin: 2 })
+          await fetch(`${SERVER}/api/drawing?player=${phone.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'image/png' },
+            body: png,
+          }).then((r) => r.ok && stats.uploaded++)
+        }
         stats.picked++
         ws.send(JSON.stringify({ type: 'pick', pick: PICKS[Math.floor(Math.random() * 3)] }))
         // choose a spawn spread across the arena and lock in
@@ -74,7 +84,26 @@ function spawnPhone(i) {
         stats.ready = (stats.ready ?? 0) + 1
       }
     }
-    if (msg.phase === 'reveal') finish('reveal reached')
+    // game 2: alternate-tap sprint at a per-bot random cadence
+    if (msg.phase === 'race' && !msg.payload.winner) {
+      if (!phone.racing) {
+        phone.racing = true
+        phone.footSide = i % 2 ? 'left' : 'right'
+        const cadence = 90 + Math.random() * 160 // ms per tap → varied finishers
+        const startIn = Math.max(0, Number(msg.payload.startsAt ?? 0) - Date.now())
+        setTimeout(() => {
+          phone.raceTimer = setInterval(() => {
+            ws.send(JSON.stringify({ type: 'raceTap', side: phone.footSide }))
+            phone.footSide = phone.footSide === 'left' ? 'right' : 'left'
+          }, cadence)
+        }, startIn)
+      }
+    } else if (phone.raceTimer) {
+      clearInterval(phone.raceTimer)
+      phone.raceTimer = null
+      phone.racing = false
+    }
+    // no exit on reveal — post-talk games (rematch) continue after it; Ctrl+C or 5min timeout ends the run
   })
 
   ws.on('error', (err) => console.log(`  ! ${name}: ${err.message}`))

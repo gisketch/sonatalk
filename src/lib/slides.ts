@@ -13,6 +13,8 @@ import SimulatorSlide from './slides/SimulatorSlide.svelte'
 import SkillsSlide from './slides/SkillsSlide.svelte'
 import StartTinySlide from './slides/StartTinySlide.svelte'
 import ClosingSlide from './slides/ClosingSlide.svelte'
+import GameSlide from './slides/GameSlide.svelte'
+import RaceSlide from './slides/RaceSlide.svelte'
 
 export interface SlideDef {
   component: Component
@@ -92,5 +94,15 @@ export const slides: SlideDef[] = [
     dark: true,
     notes:
       "30s. Close on the thesis line, drop the links, invite questions. If someone bites on 'company-wide' — great, seed planted.",
+  },
+  {
+    component: GameSlide,
+    notes:
+      "POST-TALK GAME 1. Characters persist from the demo. 'Rematch — new game' revives everyone (incl. demo casualties); they re-pick weapon + spawn. Corner QR stays open: late joiners name + draw untimed, and the ready gate waits for them. Same arena rules: show players → start → sudden death → ONE champion. Crown = game-1 champion recorded (👑 strip). Then arrow to the race.",
+  },
+  {
+    component: RaceSlide,
+    notes:
+      "POST-TALK GAME 2. The sprint: everyone lines up at the bottom, first to 50 alternating steps wins. 'Start the race' = synced 3-2-1 on all phones, then GO. Same-foot taps stumble (shake, no step). First to the line freezes the race → crown = game-2 champion recorded. '↺ race again' for reruns. Champions strip top-right shows the rewards record.",
   },
 ]

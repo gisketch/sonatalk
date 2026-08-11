@@ -75,6 +75,28 @@ describe('ws roles', () => {
     phone.socket.close()
   })
 
+  it('crowning a sole survivor records the game champion exactly once', async () => {
+    const presenter = await client({ role: 'presenter', token: TOKEN })
+    const phone = await client({ role: 'phone' })
+    await wait()
+    const id = [...session.players.keys()][0]
+    session.players.get(id).name = 'Champ'
+    send(presenter.socket, { type: 'advance', phase: 'winners', payload: { survivors: [id] } })
+    await wait()
+    // double advance to winners must not double-record
+    send(presenter.socket, { type: 'advance', phase: 'winners', payload: { survivors: [id] } })
+    await wait()
+    expect(session.champions).toEqual([{ id, name: 'Champ' }])
+    // multi-survivor crowning never records (one-winner invariant)
+    send(presenter.socket, { type: 'advance', phase: 'pick' })
+    await wait()
+    send(presenter.socket, { type: 'advance', phase: 'winners', payload: { survivors: [id, 'x'] } })
+    await wait()
+    expect(session.champions.length).toBe(1)
+    presenter.socket.close()
+    phone.socket.close()
+  })
+
   it('presenter reset wipes the roster and kicks every phone', async () => {
     const presenter = await client({ role: 'presenter', token: TOKEN })
     const phone = await client({ role: 'phone' })

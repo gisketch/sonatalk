@@ -19,6 +19,7 @@ const session = createSession()
 app.use(express.static(dist))
 app.get('/join', (_req, res) => res.sendFile(path.join(dist, 'join.html')))
 app.get('/sonata-talk', (_req, res) => res.sendFile(path.join(dist, 'sonata-talk.html')))
+app.get('/racing', (_req, res) => res.sendFile(path.join(dist, 'racing.html')))
 
 const server = http.createServer(app)
 const { broadcast } = attachWs(server, session, PRESENTER_TOKEN)

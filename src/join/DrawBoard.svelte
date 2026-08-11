@@ -27,7 +27,8 @@
   let now = $state(Date.now())
   let submitted = $state(false)
 
-  const toolsUnlocked = $derived(phase === 'tools' || phase === 'drawing')
+  // 'onboard' = late joiner drawing untimed during a game's pick phase
+  const toolsUnlocked = $derived(phase === 'tools' || phase === 'drawing' || phase === 'onboard')
   const endsAt = $derived(Number(payload.endsAt ?? 0))
   const remaining = $derived(phase === 'drawing' ? Math.max(0, Math.ceil((endsAt - now) / 1000)) : null)
   const locked = $derived(phase === 'drawing' && remaining === 0)
@@ -54,6 +55,13 @@
     onready?.(false)
   }
 
+  // Late-joiner submit: one-way — the snapshot's hasDrawing flips this phone to the pick screen.
+  let sending = $state(false)
+  async function submitCharacter() {
+    sending = true
+    await upload()
+  }
+
   async function upload() {
     submitted = true // single-shot; a failed upload just means spectating, by design
     const blob = await canvas.toPngBlob()
@@ -70,9 +78,11 @@
       ? 'just shipped · canvas'
       : phase === 'tools'
         ? 'just shipped · tools'
-        : locked
-          ? 'pencils down'
-          : 'the 60 second draw',
+        : phase === 'onboard'
+          ? 'welcome in · no rush'
+          : locked
+            ? 'pencils down'
+            : 'the 60 second draw',
   )
 </script>
 
@@ -111,6 +121,11 @@
     {:else}
       <button class="btn" onclick={readyUp}>I'm done ✓</button>
     {/if}
+  {/if}
+  {#if phase === 'onboard'}
+    <button class="btn" disabled={sending} onclick={submitCharacter}>
+      {sending ? 'uploading…' : 'submit character →'}
+    </button>
   {/if}
 </div>
 

@@ -9,6 +9,13 @@ export interface PlayerInfo {
   ready: boolean
   /** normalized 0..1 arena coordinates chosen on the phone */
   spawn: { x: number; y: number } | null
+  /** race progress — each valid alternating tap adds 0.5 */
+  steps: number
+}
+
+export interface Champion {
+  id: string
+  name: string
 }
 
 export interface Snapshot {
@@ -16,6 +23,8 @@ export interface Snapshot {
   phase: string
   payload: Record<string, unknown>
   players: PlayerInfo[]
+  /** ordered per-game winners — the rewards record */
+  champions: Champion[]
 }
 
 export type ServerMessage =

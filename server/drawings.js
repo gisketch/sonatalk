@@ -12,7 +12,8 @@ export function attachDrawings(app, session, broadcast) {
       const playerId = String(req.query.player ?? '')
       const player = session.players.get(playerId)
       if (!player) return res.status(404).json({ error: 'unknown player' })
-      if (!drawingOpen(session, Date.now())) {
+      // Late joiners get one untimed first upload; replacements stay window-locked.
+      if (player.hasDrawing && !drawingOpen(session, Date.now())) {
         return res.status(409).json({ error: 'drawing window closed' })
       }
       if (!Buffer.isBuffer(req.body) || req.body.length === 0) {

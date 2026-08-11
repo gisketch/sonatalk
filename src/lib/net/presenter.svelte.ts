@@ -1,4 +1,4 @@
-import { connect, type PlayerInfo, type Snapshot } from './socket'
+import { connect, type Champion, type PlayerInfo, type Snapshot } from './socket'
 
 /**
  * Deck-side presenter client with the state mirror: everything received is retained
@@ -15,6 +15,8 @@ class Presenter {
   players = $state<PlayerInfo[]>([])
   /** mirror: playerId → object URL of their uploaded PNG; survives server death */
   drawings = $state<Record<string, string>>({})
+  /** mirror: per-game winners — the rewards record */
+  champions = $state<Champion[]>([])
 
   #send: ((obj: Record<string, unknown>) => void) | null = null
 
@@ -38,6 +40,7 @@ class Presenter {
     this.phase = 'lobby'
     this.payload = {}
     this.players = []
+    this.champions = []
     for (const url of Object.values(this.drawings)) {
       if (url !== 'pending') URL.revokeObjectURL(url)
     }
@@ -47,6 +50,7 @@ class Presenter {
   #absorb(snap: Snapshot) {
     this.phase = snap.phase
     this.payload = snap.payload
+    if (snap.champions) this.champions = snap.champions
     // Mirror rule: players only ever merge in; a dropped server never erases them here.
     const known = new Map(this.players.map((p) => [p.id, p]))
     for (const p of snap.players) known.set(p.id, p)
@@ -82,6 +86,11 @@ class Presenter {
 
   crown(survivors: string[]) {
     this.#send?.({ type: 'crown', survivors })
+  }
+
+  /** New game, same characters: server revives everyone and reopens picks. */
+  rematch() {
+    this.#send?.({ type: 'rematch' })
   }
 
   /** Full reset (Shift+R on the deck): server wipes everyone; phones reload and rejoin fresh. */
