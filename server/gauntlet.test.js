@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ROUND_CAP, WINDOW_FLOOR_MS, WINDOW_START_MS, beginRound, generateRound, recordTap,
-  resolveRound, startGauntlet, windowFor,
+  ROUND_CAP, WINDOW_FLOOR_MS, WINDOW_START_MS, beatFor, beginRound, generateRound,
+  recordTap, resolveRound, startGauntlet, windowFor,
 } from './gauntlet.js'
 import { addPlayer, createSession, setName } from './session.js'
 
@@ -23,9 +23,11 @@ const force = (s, expected) => {
 }
 
 describe('gauntlet engine (score attack)', () => {
-  it('window ramps down to the floor', () => {
+  it('window and between-round beat both ramp down', () => {
     expect(windowFor(1)).toBe(WINDOW_START_MS)
     expect(windowFor(999)).toBe(WINDOW_FLOOR_MS)
+    expect(beatFor(1)).toBeGreaterThan(beatFor(10))
+    expect(beatFor(999)).toBe(1_100)
   })
 
   it('prompts are valid; count commands ride the single tap pad', () => {

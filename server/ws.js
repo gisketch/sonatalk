@@ -4,7 +4,7 @@ import {
   setDrawReady, setPhase, setName, setPick, setReady, snapshot, startRace,
 } from './session.js'
 import {
-  RESULTS_BEAT_MS, RESULTS_GRACE_MS, beginRound, recordTap, resolveRound, startGauntlet,
+  RESULTS_GRACE_MS, beatFor, beginRound, recordTap, resolveRound, startGauntlet,
 } from './gauntlet.js'
 
 const HEARTBEAT_MS = 30_000 // keeps idle sockets alive through nginx proxy timeouts
@@ -131,7 +131,8 @@ export function attachWs(httpServer, session, presenterToken) {
               )
               const { winner } = resolveRound(session, connectedIds)
               broadcast()
-              if (!winner) gauntletTimer = setTimeout(runRound, RESULTS_BEAT_MS)
+              // breather shrinks as rounds climb — the whole game accelerates
+              if (!winner) gauntletTimer = setTimeout(runRound, beatFor(session.gauntletRound))
             }, wait)
           }
           clearTimeout(gauntletTimer)

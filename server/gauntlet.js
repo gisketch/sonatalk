@@ -1,118 +1,27 @@
 /**
- * Game 3 — The Gauntlet. Pure round engine: prompt generation + resolution.
+ * Game 3 — The Gauntlet. Round lifecycle: windows, taps, scoring, tiebreaks.
+ * Prompt generation lives in prompts.js.
  * Score attack: nobody is eliminated — every correct answer scores a point, rounds
  * auto-run faster and faster, and the first round EVERYBODY fails ends the game.
  * Most correct wins; ties go to sudden-death tiebreak rounds among the leaders.
  */
 
-export const WINDOW_START_MS = 3_000
+export const WINDOW_START_MS = 2_500
 export const WINDOW_STEP_MS = 150
-export const WINDOW_FLOOR_MS = 800
+export const WINDOW_FLOOR_MS = 650
 export const RESULTS_GRACE_MS = 250 // in-flight taps at window close still count
-export const RESULTS_BEAT_MS = 2_600 // how long the results card breathes before the next round
 export const ROUND_CAP = 30 // backstop: sharp crowds can't run forever
+
+import { generateRound } from './prompts.js'
+export { generateRound }
 
 export function windowFor(round) {
   return Math.max(WINDOW_FLOOR_MS, WINDOW_START_MS - (round - 1) * WINDOW_STEP_MS)
 }
 
-const rand = (n) => Math.floor(Math.random() * n)
-const pickOne = (arr) => arr[rand(arr.length)]
-
-/**
- * expected: 'left' | 'right' (yes/no) | 'once' | 'double' | 'none' (single tap pad)
- * mode: 'tap' (one big pad, count matters) | 'yesno' (NO left / YES right)
- */
-function reflexPrompt() {
-  return pickOne([
-    { text: 'TAP ONCE', sub: 'exactly one tap', expected: 'once', mode: 'tap' },
-    { text: 'TAP TWICE', sub: 'exactly two taps', expected: 'double', mode: 'tap' },
-    { text: "DON'T TAP", sub: 'discipline.', expected: 'none', mode: 'tap' },
-  ])
-}
-
-// yes/no rounds: phones show NO on the left (red) and YES on the right (green) —
-// YES travels as 'right'.
-function mathPrompt(round) {
-  const scale = Math.min(6, 1 + Math.floor(round / 4)) // operands keep growing
-  const a = 2 + rand(6 * scale)
-  const b = 2 + rand(6 * scale)
-  const op = pickOne(['×', '+', '−'])
-  const real = op === '×' ? a * b : op === '+' ? a + b : a - b
-  const truthy = Math.random() < 0.5
-  // near-miss wrong answers look right under time pressure
-  const shown = truthy ? real : real + pickOne([-3, -2, -1, 1, 2, 3])
-  return {
-    text: `${a} ${op} ${b} = ${shown}`,
-    sub: 'true? answer on your phone',
-    expected: truthy ? 'right' : 'left',
-    mode: 'yesno',
-  }
-}
-
-const LOGIC_FACTS = [
-  ['🪨 beats ✂️', true], ['✂️ beats 📄', true], ['📄 beats 🪨', true],
-  ['✂️ beats 🪨', false], ['🪨 beats 📄', false], ['📄 beats ✂️', false],
-]
-function logicPrompt() {
-  const kind = rand(3)
-  if (kind === 0) {
-    const [text, truth] = pickOne(LOGIC_FACTS)
-    return { text, sub: 'true? answer on your phone', expected: truth ? 'right' : 'left', mode: 'yesno' }
-  }
-  if (kind === 1) {
-    const n = 2 + rand(97)
-    const claimOdd = Math.random() < 0.5
-    return {
-      text: `${n} is ${claimOdd ? 'ODD' : 'EVEN'}`,
-      sub: 'true? answer on your phone',
-      expected: (n % 2 === 1) === claimOdd ? 'right' : 'left',
-      mode: 'yesno',
-    }
-  }
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  const i = rand(24)
-  const j = i + 1 + rand(Math.min(4, 25 - i))
-  const flip = Math.random() < 0.5
-  const [x, y] = flip ? [letters[j], letters[i]] : [letters[i], letters[j]]
-  return {
-    text: `${x} comes before ${y}`,
-    sub: 'true? answer on your phone',
-    expected: flip ? 'left' : 'right',
-    mode: 'yesno',
-  }
-}
-
-const COLORS = [
-  ['RED', '#C0392B'], ['BLUE', '#2E6F95'], ['GREEN', '#4E7A3A'], ['ORANGE', '#D97757'],
-]
-function stroopPrompt() {
-  const word = rand(COLORS.length)
-  const match = Math.random() < 0.45
-  const ink = match ? word : (word + 1 + rand(COLORS.length - 1)) % COLORS.length
-  return {
-    text: COLORS[word][0],
-    ink: COLORS[ink][1],
-    sub: 'ink matches word?',
-    expected: match ? 'right' : 'left',
-    mode: 'yesno',
-  }
-}
-
-/** Category mix shifts nastier as rounds climb. */
-export function generateRound(round) {
-  const roll = Math.random()
-  const prompt =
-    round <= 2
-      ? reflexPrompt() // warm up on pure reflex
-      : roll < 0.3
-        ? reflexPrompt()
-        : roll < 0.55
-          ? mathPrompt(round)
-          : roll < 0.75
-            ? logicPrompt()
-            : stroopPrompt()
-  return { round, windowMs: windowFor(round), ...prompt }
+/** The between-round breather shrinks too — the whole game accelerates. */
+export function beatFor(round) {
+  return Math.max(1_100, 2_600 - round * 120)
 }
 
 /**
