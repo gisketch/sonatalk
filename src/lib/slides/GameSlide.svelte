@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import QRCode from 'qrcode'
   import { fx } from '../fx'
+  import { deck } from '../deck.svelte'
   import { presenter } from '../net/presenter.svelte'
   import Arena from '../battle/Arena.svelte'
   import ChampionsStrip from '../components/ChampionsStrip.svelte'
@@ -19,7 +20,7 @@
 
 <div class="eyebrow" use:fx>After Hours · Game Time</div>
 <h2 use:fx={{ d: 0.1 }}>Rematch. Same characters, one champion.</h2>
-<Arena rematchable />
+<Arena rematchable onnext={() => deck.next()} />
 <ChampionsStrip />
 
 <!-- compact QR for late joiners: scan → name → draw (no timer) → pick -->

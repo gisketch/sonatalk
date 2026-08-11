@@ -6,5 +6,5 @@
 
 <div class="eyebrow" use:fx>Game 3 · The Final</div>
 <h2 use:fx={{ d: 0.1 }}>The Gauntlet. Obey the screen or fall.</h2>
-<GauntletStage />
+<GauntletStage finale />
 <ChampionsStrip />

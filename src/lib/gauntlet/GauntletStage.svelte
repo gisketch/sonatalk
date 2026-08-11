@@ -2,6 +2,10 @@
   import { fx } from '../fx'
   import LagControl from '../components/LagControl.svelte'
   import { presenter } from '../net/presenter.svelte'
+  import { buildLabel, buildRoast } from './lines'
+
+  /** finale: last game of the night — after the crown there is no next game */
+  let { finale = false }: { finale?: boolean } = $props()
 
   let now = $state(Date.now())
   $effect(() => {
@@ -53,14 +57,14 @@
     return correctIds.includes(id) ? 'good' : 'bad'
   }
 
-  const label = $derived.by(() => {
-    if (mode === 'yesno') return correct === 'right' ? 'YES was correct' : 'NO was correct'
-    return {
-      once: 'exactly ONE tap was the move',
-      double: 'exactly TWO taps was the move',
-      none: 'the move was NOT to tap',
-    }[correct] ?? ''
+  const missRoast = $derived.by(() => {
+    if (stage !== 'results' || correctCount === 0 || winner) return ''
+    const missed = wall
+      .filter((p) => !benched(p.id) && !correctIds.includes(p.id))
+      .map((p) => p.name ?? 'anon')
+    return buildRoast(round, missed)
   })
+  const label = $derived(buildLabel(mode, correct))
 
   // Winner dance (same family as the other games).
   const DANCES = ['bounce', 'spin', 'sway', 'hop']
@@ -120,6 +124,9 @@
       {:else}
         <p class="gtitle small">{correctCount} / {fieldCount} scored</p>
         <p class="sub">{label}</p>
+        {#if missRoast}
+          <p class="roast">{missRoast}</p>
+        {/if}
       {/if}
     </div>
   {:else}
@@ -146,7 +153,11 @@
   {#if winner && !crowned}
     <button class="btn" onclick={crown}>crown the champion →</button>
   {:else if winner && crowned}
-    <button class="btn" onclick={begin}>↺ run it again</button>
+    {#if finale}
+      <span class="wait">that's the night — champions up top 👑</span>
+    {:else}
+      <button class="btn" onclick={begin}>↺ run it again</button>
+    {/if}
   {:else if !inGauntlet}
     <button class="btn" onclick={begin}>open the gauntlet →</button>
   {:else if stage === 'idle'}
@@ -255,6 +266,14 @@
     min-width: 1.2rem; text-align: center; padding: 0.05rem 0.25rem;
   }
   .sub.hot { color: var(--clay-deep); }
+  .roast {
+    font-family: var(--mono); font-size: clamp(0.68rem, 1.4vw, 0.9rem); color: var(--clay-deep);
+    letter-spacing: 0.06em; animation: roastIn 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+  @keyframes roastIn {
+    0% { transform: translateY(8px) scale(0.85); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
   @media (prefers-reduced-motion: reduce) { .gdance { animation: none !important; } }
 
   .gauntlet-ctl {

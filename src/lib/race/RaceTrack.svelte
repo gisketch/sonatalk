@@ -3,6 +3,9 @@
   import LagControl from '../components/LagControl.svelte'
   import { presenter } from '../net/presenter.svelte'
 
+  /** onnext: after the crown, advance to the next game (talk deck only; test page replays) */
+  let { onnext }: { onnext?: () => void } = $props()
+
   let now = $state(Date.now())
   $effect(() => {
     const t = setInterval(() => (now = Date.now()), 150)
@@ -43,6 +46,28 @@
   /** stepping look: tilt flips with each half-step */
   const tilt = (steps: number) => (Math.floor(steps * 2) % 2 === 0 ? -9 : 9)
 
+  // Lead-change hype: "X takes the lead!" toasts as the crown hops racers.
+  const LEAD_LINES = ['👑 {n} takes the lead!', '👑 {n} storms ahead!', '👑 {n} says bye!', '👑 {n} is cooking!']
+  let toast = $state<{ n: number; text: string } | null>(null)
+  let toastN = 0
+  let lastLeader = ''
+  $effect(() => {
+    if (!racing || winner || !leaderId || leaderId === lastLeader) return
+    const wasFirst = lastLeader === ''
+    lastLeader = leaderId
+    if (wasFirst) return // no hype for the very first step of the race
+    const name = racers.find((r) => r.id === leaderId)?.name ?? 'someone'
+    const n = ++toastN
+    toast = { n, text: LEAD_LINES[Math.floor(Math.random() * LEAD_LINES.length)].replace('{n}', name) }
+    setTimeout(() => { if (toast?.n === n) toast = null }, 2_200)
+  })
+  $effect(() => {
+    if (!racing) lastLeader = ''
+  })
+  /** last stretch: the leader's chip pulses */
+  const leaderSteps = $derived(racers.find((r) => r.id === leaderId)?.steps ?? 0)
+  const almostThere = $derived(racing && !winner && leaderSteps / TARGET > 0.85)
+
   // Winner celebration: one random dance per win (stable across rebroadcasts).
   const DANCES = ['bounce', 'spin', 'sway', 'hop']
   let dance = $state('bounce')
@@ -79,7 +104,7 @@
       style:margin-left="-{size / 2}rem"
     >
       {#if leaderId === p.id && p.steps > 0}
-        <span class="lead-crown">👑</span>
+        <span class="lead-crown" class:hot={almostThere}>👑</span>
       {/if}
       {#if avatar(p.id)}
         <img src={avatar(p.id)} alt={p.name ?? 'racer'} style:width="{size}rem" style:height="{size}rem" />
@@ -89,6 +114,11 @@
       <figcaption>{p.name ?? 'anon'}</figcaption>
     </figure>
   {/each}
+  {#if toast}
+    {#key toast.n}
+      <div class="lead-toast">{toast.text}</div>
+    {/key}
+  {/if}
   {#if racing && !winner && countdown > 0}
     <div class="overlay"><div class="count">{countdown}</div></div>
   {:else if racing && !winner && now - startsAt < 900}
@@ -108,7 +138,11 @@
   {#if winner && !crowned}
     <button class="btn" onclick={crown}>crown the winner →</button>
   {:else if winner && crowned}
-    <button class="btn" onclick={startRace}>↺ race again</button>
+    {#if onnext}
+      <button class="btn" onclick={onnext}>next game — the final →</button>
+    {:else}
+      <button class="btn" onclick={startRace}>↺ race again</button>
+    {/if}
   {:else if !racing}
     <button class="btn" onclick={startRace}>start the race — 3·2·1 →</button>
   {:else if countdown > 0}
@@ -153,6 +187,22 @@
   .lead-crown {
     position: absolute; top: -1.1rem; font-size: 0.95rem;
     filter: drop-shadow(0 2px 4px rgba(38, 38, 36, 0.25));
+  }
+  .lead-crown.hot { animation: crownPulse 0.5s infinite ease-in-out; }
+  @keyframes crownPulse {
+    50% { transform: scale(1.45) rotate(-8deg); }
+  }
+  .lead-toast {
+    position: absolute; top: 1.1rem; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.06em; color: var(--clay-deep);
+    background: rgba(250, 249, 245, 0.95); border: 1px solid var(--clay); border-radius: 999px;
+    padding: 0.4rem 1rem; pointer-events: none; white-space: nowrap;
+    animation: toastIn 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+  @keyframes toastIn {
+    0% { transform: translateX(-50%) translateY(-14px) scale(0.7); opacity: 0; }
+    60% { transform: translateX(-50%) translateY(2px) scale(1.05); opacity: 1; }
+    100% { transform: translateX(-50%) translateY(0) scale(1); }
   }
   .racer figcaption {
     font-family: var(--mono); font-size: 0.56rem; color: var(--ink-soft);

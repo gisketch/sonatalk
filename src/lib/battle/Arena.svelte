@@ -7,10 +7,14 @@
     ARENA_H, ARENA_W, createBattle, findWinner, step, type BattleState,
   } from './engine'
   import { TEAMS, type Team } from './rps'
+  import Killfeed from './Killfeed.svelte'
   import WinnerOverlay from './WinnerOverlay.svelte'
 
-  /** rematchable: game mode — offers "rematch" (revive-all) after a champion is crowned. */
-  let { rematchable = false }: { rematchable?: boolean } = $props()
+  /**
+   * rematchable: game mode — the pre-game control revives everyone for game 1.
+   * onnext: after the crown, advance to the next game (no rematches — 3 games, one arc).
+   */
+  let { rematchable = false, onnext }: { rematchable?: boolean; onnext?: () => void } = $props()
 
   const W = ARENA_W
   const H = ARENA_H
@@ -141,6 +145,7 @@
       const events = step(battle, dt)
       for (const ev of events) {
         if (live) presenter.eliminate(ev.id) // 💀 to that phone
+        announceKill(ev.id, ev.by)
       }
       elapsed -= dt
     }
@@ -169,6 +174,7 @@
     const entity = battle.entities.find(atE => atE.id === id)!
     entity.alive = false
     if (live) presenter.eliminate(id)
+    announceKill(id, null) // moderation kill reads like an act of god
   }
 
   function toWinners() {
@@ -178,12 +184,23 @@
   const isChampion = $derived(!!winner && survivors.length === 1)
   const crowned = $derived(isChampion && presenter.phase === 'winners')
 
+  // Killfeed lives in its own component; the arena just reports eliminations.
+  let killfeed: Killfeed | undefined = $state()
+  function announceKill(victimId: string, killerId: string | null) {
+    if (!battle) return
+    const victim = battle.entities.find((e) => e.id === victimId)
+    if (!victim) return
+    const killer = killerId ? (battle.entities.find((e) => e.id === killerId) ?? null) : null
+    killfeed?.announce(victim, killer)
+  }
+
   onDestroy(() => clearInterval(timer))
 </script>
 
 <div class="arena-wrap" use:fx={{ d: 0.25 }}>
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
   <canvas bind:this={canvasEl} width={W} height={H} onclick={arenaClick}></canvas>
+  <Killfeed bind:this={killfeed} />
   {#if winner}
     <WinnerOverlay {winner} {survivors} {isChampion} />
   {/if}
@@ -192,7 +209,11 @@
   {#if live}
     {#if winner}
       {#if isChampion && rematchable && crowned}
-        <button class="btn" onclick={rematch}>rematch — next game →</button>
+        {#if onnext}
+          <button class="btn" onclick={onnext}>next game — the sprint →</button>
+        {:else}
+          <button class="btn" onclick={rematch}>rematch →</button>
+        {/if}
       {:else if isChampion}
         <button class="btn" onclick={toWinners} disabled={crowned}>crown the winner →</button>
       {:else}
