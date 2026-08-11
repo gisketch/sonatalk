@@ -4,6 +4,20 @@
 
 <div class="eyebrow" use:fx>One Idea</div>
 <h2 use:fx={{ d: 0.1 }}>Feedforward steers. Feedback corrects.</h2>
+
+<div class="sources">
+  <div class="src" use:fx={{ d: 0.2 }}>
+    <span class="who">OpenAI · Codex team</span>
+    <p>“Iterate on the <b>harness</b>, not the model.”</p>
+    <span class="where">openai.com/index/harness-engineering</span>
+  </div>
+  <div class="src" use:fx={{ d: 0.3 }}>
+    <span class="who">Birgitta Böckeler</span>
+    <p><b>Guides</b> steer it. <b>Sensors</b> correct it.</p>
+    <span class="where">martinfowler.com · 2026</span>
+  </div>
+</div>
+
 <div class="diagram-area">
   <!-- SVG internals keep the reference's CSS fx/pop classes; SMIL drives the traveling pulses -->
   <svg viewBox="0 0 1000 400" font-family="Inter, sans-serif">
@@ -74,16 +88,28 @@
 <p class="footline" use:fx={{ d: 2.2 }}>
   Only feedback → it <b>repeats the same mistakes</b>. Only feedforward → you <b>never learn if the rules worked</b>.
 </p>
-<p class="sources" use:fx={{ d: 2.5 }}>
-  <span><b>OpenAI</b> — "iterate on the harness, not the model" · openai.com/index/harness-engineering</span>
-  <span><b>Böckeler</b> — guides steer, sensors correct · martinfowler.com, 2026</span>
-</p>
 
 <style>
+  /* the two ideas the whole talk stands on — showcased, not footnoted */
   .sources {
-    display: flex; gap: 2rem; flex-wrap: wrap; padding-top: 0.5rem;
-    font-family: var(--mono); font-size: clamp(0.58rem, 0.95vw, 0.72rem);
+    display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.8rem, 1.8vw, 1.6rem);
+    margin-bottom: clamp(0.4rem, 1.4vh, 1rem);
+  }
+  .src {
+    background: var(--paper); border: 1px solid var(--line); border-left: 3px solid var(--clay);
+    border-radius: 0.7rem; padding: clamp(0.5rem, 1.3vh, 0.8rem) clamp(0.8rem, 1.4vw, 1.1rem);
+  }
+  .who {
+    display: block; font-family: var(--mono); font-size: clamp(0.55rem, 0.92vw, 0.68rem);
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--clay-deep);
+  }
+  .src p {
+    font-family: var(--serif); font-size: clamp(0.95rem, 1.75vw, 1.3rem); line-height: 1.25;
+    color: var(--ink); margin: 0.22em 0 0.28em;
+  }
+  .src p b { font-weight: 600; color: var(--clay-deep); }
+  .where {
+    font-family: var(--mono); font-size: clamp(0.5rem, 0.85vw, 0.64rem);
     color: var(--muted); letter-spacing: 0.04em;
   }
-  .sources b { color: var(--clay-deep); font-weight: 500; }
 </style>

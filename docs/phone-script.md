@@ -28,9 +28,9 @@ NEVER cut: 2 (the confession), 3 (concept), 8 (humans steer), 12 (reveal).
 - **"So this talk isn't theory I read. It's what I built after cleaning up my own mess."**
 
 ## 3 · FEEDFORWARD / FEEDBACK — 2min ← THE CONCEPT
-- "Two articles changed how I think about this — they're on screen."
-- OpenAI's Codex team: **"when the agent fails, don't wait for a better model — fix the HARNESS around it."**
-- Böckeler on martinfowler.com names the two halves:
+- "Two articles changed how I think about this. **These two.**" (point at the cards, left then right)
+- LEFT — OpenAI's Codex team: **"when the agent fails, don't wait for a better model — fix the HARNESS around it."**
+- RIGHT — Böckeler on martinfowler.com names the two halves:
   - **GUIDES** — steer it BEFORE it acts (docs, conventions, skills)
   - **SENSORS** — catch it AFTER (linters, tests, checks)
 - (point at the dots) "Work flows right. Feedback flows back. The errors go to the AGENT, not to me — it fixes itself before I ever look."
