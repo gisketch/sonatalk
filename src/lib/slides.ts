@@ -11,6 +11,7 @@ import QRSlide from './slides/QRSlide.svelte'
 import RevealSlide from './slides/RevealSlide.svelte'
 import SimulatorSlide from './slides/SimulatorSlide.svelte'
 import SkillsSlide from './slides/SkillsSlide.svelte'
+import HumansSlide from './slides/HumansSlide.svelte'
 import StartTinySlide from './slides/StartTinySlide.svelte'
 import ClosingSlide from './slides/ClosingSlide.svelte'
 import GameSlide from './slides/GameSlide.svelte'
@@ -44,7 +45,7 @@ export const slides: SlideDef[] = [
   {
     component: SonataSlide,
     notes:
-      '45s. Sonata = my harness, built directly on those two ideas. Two halves: skills that BUILD (the feedforward side — how features get specced and implemented) and checks that VALIDATE (the feedback side). Grown on real work: every repeated mistake became part of it.',
+      "45s. One machine, running by itself — trace it with your hand. TOP lane (clay, feedforward): an idea gets stamped through grill → spec → tickets → implement, and comes out the far end as CODE. It turns the corner and rides the BOTTOM lane (feedback) back through lint → tests → the 300-line gate, and what drops out is a TRUSTED diff. Two halves, one loop. Grown on real work: every repeated mistake became a station or an arch.",
   },
   {
     component: SensorsSlide,
@@ -60,6 +61,11 @@ export const slides: SlideDef[] = [
     component: SkillsSlide,
     notes:
       "1 min. Land skills for the devs in the room: it's a markdown file the agent loads on demand — what (a checklist it follows), how (slash command or auto-trigger via description), when (anything you explain twice). Point at the example: 20 lines, whole team gets your best workflow. Every Sonata step tonight is literally a skill. Segue: enough theory — phones out.",
+  },
+  {
+    component: HumansSlide,
+    notes:
+      "1 min INTERACTIVE. The counterweight — everything so far runs without me, so am I still an engineer? Three places a human still touches the work: DESIGN before, DECIDE during, REVIEW after. ONE click ('take your hands off'): hands lift, the belt keeps the exact same speed, but 'you understood' freezes while 'diffs shipped' keeps climbing — the red gap is code nobody understands. Punchline: speed was never the problem, direction was. Click back before moving on.",
   },
   {
     component: QRSlide,

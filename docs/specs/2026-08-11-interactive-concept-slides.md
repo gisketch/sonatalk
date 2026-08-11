@@ -1,6 +1,6 @@
 # Interactive concept slides — sensors as live simulations
 
-Date: 2026-08-11 · Status: proposed (awaiting go)
+Date: 2026-08-11 · Status: built (sensors, docs, slide 4 machine, humans-steer)
 
 ## Problem & Desired Outcome
 
@@ -51,7 +51,7 @@ Split stage, same prompt on both sides ("add refunds to payments"):
 One click, one punchline: docs are executable context — the diff changes because the
 context changed.
 
-### Slide 4 · Sonata "My Harness" — the two-lane machine (approved, build next)
+### Slide 4 · Sonata "My Harness" — the two-lane machine (built)
 
 For the visual learners: the two cards become one continuously-running assembly line —
 no clicks, it just breathes while the presenter talks (45s beat).
@@ -66,6 +66,46 @@ no clicks, it just breathes while the presenter talks (45s beat).
   two halves, matching slide 3's vocabulary (clay = feedforward, ink = feedback).
 - Implementation: SMIL/CSS loop like FlowSlide's traveling pulses (rAF-proof); one new
   component; existing card copy moves into two compact lane labels + footline.
+
+### New slide · HUMANS STEER — the rider (built, deck slide 8)
+
+The missing philosophical beat: the harness automates the loop, but **humans steer**.
+Answers the skeptic in the room ("if the agent writes it, am I still a dev? do I still
+understand my own codebase?").
+
+**Placement: between Skills (7) and QR (8).** It caps the theory arc — after showing
+skills + sensors + docs, this is the "and none of that replaces you" counterweight —
+right before phones come out. It also pays off the title-slide horse metaphor: you
+rented the horse, you built the harness… *a harness without a rider goes nowhere.*
+
+**The visual: one machine, three human hands.** A compact version of the Flow loop
+runs continuously in the middle (dots traveling, self-correcting — the audience already
+knows this machine). Around it, three lit checkpoints where a human hand physically
+touches the work:
+
+- **DESIGN** (before): hand sketches the architecture box the machine runs inside
+- **DECIDE** (during): hand at a fork — the grill — picking one of two paths
+- **REVIEW** (after): hand stamping the final diff — nothing merges un-read
+
+**The interactive beat (one click, like Docs):** presenter clicks **"take your hands
+off"** — the three checkpoints dim, the machine *keeps running at full speed*, but the
+output cards start drifting: skewed, stacking unreviewed, tinting red, labels like
+`merged, unread` / `pattern nobody chose` / `who designed this?`. Click again — hands
+back on, output straightens green. The machine's speed never changed. **Speed was
+never the problem. Direction was.**
+
+Footline: "The agent types. **You design, you decide, you review.** The harness exists
+so the human's time goes where judgment lives — you still understand every line that
+ships. That's the point."
+
+Script beat (~45s): "Everything I just showed you runs without me. So am I still an
+engineer? Watch what happens when I let go. [click] Same speed. No direction. The
+harness doesn't remove the human — it moves the human to the three places that
+actually need one."
+
+Implementation: one new component, `HumansSlide.svelte`; reuse Flow's traveling-dot
+idiom at small scale; `.steer-wrap` click guard; toggle is a two-state boolean like
+DocsSlide. Deck order + notes + phone-script section added.
 
 ## In Scope
 
