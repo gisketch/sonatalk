@@ -24,6 +24,8 @@
         dead = false
         champion = false
       }
+      // Full session reset: reload rejoins this phone as a brand-new player.
+      if (msg.type === 'kicked') location.reload()
       if (msg.type === 'snapshot') {
         phase = msg.phase
         payload = msg.payload

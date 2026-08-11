@@ -57,6 +57,21 @@ describe('ws roles', () => {
     fake.socket.close()
   })
 
+  it('presenter reset wipes the roster and kicks every phone', async () => {
+    const presenter = await client({ role: 'presenter', token: TOKEN })
+    const phone = await client({ role: 'phone' })
+    await wait()
+    expect(session.players.size).toBe(1)
+    send(presenter.socket, { type: 'reset' })
+    await wait()
+    expect(session.players.size).toBe(0)
+    expect(session.phase).toBe('lobby')
+    expect(phone.messages.some((m) => m.type === 'kicked')).toBe(true)
+    expect(presenter.messages.some((m) => m.type === 'reset')).toBe(true)
+    presenter.socket.close()
+    phone.socket.close()
+  })
+
   it('presenter advances phases; late joiner receives current phase', async () => {
     const presenter = await client({ role: 'presenter', token: TOKEN })
     send(presenter.socket, { type: 'advance', phase: 'names' })

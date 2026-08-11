@@ -32,19 +32,12 @@ export function removePlayer(session, id) {
   session.drawings.delete(id)
 }
 
-/** Back to a fresh lobby: connected phones stay, everything else wipes. */
+/** Full wipe: empty lobby, no players. Phones are told to reload and rejoin fresh. */
 export function resetSession(session) {
   session.phase = 'lobby'
   session.payload = {}
+  session.players.clear()
   session.drawings.clear()
-  for (const player of session.players.values()) {
-    player.name = null
-    player.pick = null
-    player.alive = true
-    player.hasDrawing = false
-    player.ready = false
-    player.spawn = null
-  }
 }
 
 export function setPhase(session, phase, payload = {}) {

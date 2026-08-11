@@ -76,7 +76,12 @@ export function attachWs(httpServer, session, presenterToken) {
         if (msg.type === 'reset') {
           resetSession(session)
           for (const client of wss.clients) {
-            if (client.readyState === client.OPEN && client.role) {
+            if (client.readyState !== client.OPEN || !client.role) continue
+            if (client.role === 'phone') {
+              // Kicked phones reload and rejoin as fresh players; stale tabs die here too.
+              client.playerId = undefined
+              client.send(JSON.stringify({ type: 'kicked' }))
+            } else {
               client.send(JSON.stringify({ type: 'reset' }))
             }
           }

@@ -117,7 +117,7 @@ Total budget ~10 min with the game. Hotkeys: `N` notes · `F` fullscreen · `O` 
 | Thing | Key |
 |---|---|
 | Bail demo slide to fake sim | `O` |
-| Restart whole session | `Shift+R` |
+| FULL reset (wipes players, phones auto-rejoin) | `Shift+R` |
 | Kill a rude drawing | click the sprite |
 | Notes on/off | `N` |
 | Wifi died mid-arc | battle still runs — deck has everything |

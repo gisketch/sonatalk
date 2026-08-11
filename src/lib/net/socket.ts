@@ -24,6 +24,7 @@ export type ServerMessage =
   | { type: 'eliminated' }
   | { type: 'winner' }
   | { type: 'reset' }
+  | { type: 'kicked' }
 
 export function wsUrl(): string {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws'

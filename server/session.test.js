@@ -54,7 +54,7 @@ describe('session', () => {
     expect(p.spawn).toEqual({ x: 1, y: 0 }) // clamped
   })
 
-  it('reset returns to lobby, keeps players, wipes their progress', () => {
+  it('reset is a full wipe: lobby, no players, no drawings', () => {
     const s = createSession()
     const p = addPlayer(s)
     setName(s, p.id, 'Ghe')
@@ -62,18 +62,12 @@ describe('session', () => {
     setPick(s, p.id, 'rock')
     setReady(s, p.id, { x: 0.3, y: 0.7 })
     p.hasDrawing = true
-    p.alive = false
     s.drawings.set(p.id, Buffer.from('png'))
     resetSession(s)
     expect(s.phase).toBe('lobby')
-    expect(s.players.size).toBe(1)
-    expect(p.name).toBe(null)
-    expect(p.pick).toBe(null)
-    expect(p.alive).toBe(true)
-    expect(p.hasDrawing).toBe(false)
-    expect(p.ready).toBe(false)
-    expect(p.spawn).toBe(null)
+    expect(s.players.size).toBe(0)
     expect(s.drawings.size).toBe(0)
+    expect(s.payload).toEqual({})
   })
 
   it('only accepts picks during the pick phase', () => {

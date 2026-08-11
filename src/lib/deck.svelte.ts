@@ -37,7 +37,10 @@ class Deck {
     else if (e.key.toLowerCase() === 'n') this.showNotes = !this.showNotes
     else if (e.key.toLowerCase() === 'o') presenter.forceOffline = !presenter.forceOffline
     // Shift+R so a stray keypress can't nuke the session mid-talk
-    else if (e.key === 'R' && e.shiftKey) presenter.reset()
+    else if (e.key.toLowerCase() === 'r' && e.shiftKey) {
+      presenter.forceOffline = false // a full reset always lands back in live mode
+      presenter.reset()
+    }
     else if (e.key.toLowerCase() === 'f') {
       if (document.fullscreenElement) document.exitFullscreen()
       else document.documentElement.requestFullscreen()

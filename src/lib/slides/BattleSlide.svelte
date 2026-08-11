@@ -38,9 +38,9 @@
     live ? ['pick', 'battle'].includes(presenter.phase) && !running && !winner : !running,
   )
 
-  // Session reset clears the arena too.
+  // Session reset clears the arena too — even mid-forceOffline.
   $effect(() => {
-    if (live && presenter.phase === 'lobby' && (battle || winner)) {
+    if (presenter.live && presenter.phase === 'lobby' && (battle || winner)) {
       clearInterval(timer)
       running = false
       battle = null

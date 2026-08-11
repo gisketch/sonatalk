@@ -27,9 +27,9 @@
   let messages = $state<Msg[]>([])
   let chatBody: HTMLDivElement | undefined
 
-  // Session reset (Shift+R) rewinds the tier sequence with it.
+  // Session reset (Shift+R) rewinds the tier sequence with it — even mid-forceOffline.
   $effect(() => {
-    if (live && presenter.phase === 'lobby' && tierIndex > 0) {
+    if (presenter.live && presenter.phase === 'lobby' && tierIndex > 0) {
       tierIndex = 0
       reset()
     }

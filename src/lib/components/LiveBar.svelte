@@ -1,12 +1,8 @@
 <script lang="ts">
   import { presenter } from '../net/presenter.svelte'
 
-  const counts = $derived(
-    ['rock', 'paper', 'scissors'].map((t) => ({
-      team: t,
-      n: presenter.players.filter((p) => p.pick === t).length,
-    })),
-  )
+  // Picks stay secret until the battle — showing team counts lets people counter-pick.
+  const picked = $derived(presenter.players.filter((p) => p.pick).length)
 </script>
 
 {#if presenter.live}
@@ -14,9 +10,7 @@
     <span class="dot"></span>
     <span>{presenter.liveCount} connected</span>
     {#if presenter.phase === 'pick'}
-      {#each counts as c (c.team)}
-        <span class="team">{c.team === 'rock' ? '🪨' : c.team === 'paper' ? '📄' : '✂️'} {c.n}</span>
-      {/each}
+      <span class="team">✊ {picked} picked</span>
     {/if}
   </div>
 {/if}

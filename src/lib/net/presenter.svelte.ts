@@ -84,7 +84,7 @@ class Presenter {
     this.#send?.({ type: 'crown', survivors })
   }
 
-  /** Fresh lobby for everyone (Shift+R on the deck). Connected phones stay joined. */
+  /** Full reset (Shift+R on the deck): server wipes everyone; phones reload and rejoin fresh. */
   reset() {
     this.#send?.({ type: 'reset' })
   }
