@@ -33,18 +33,24 @@ BEFORE STARTING: Shift+R once. Set TV delay on race slide later.
 - **"Skills that BUILD. Checks that VALIDATE."** Same two halves.
 - "It wasn't designed in a vacuum — it grew on real work. Every mistake that happened twice became part of the system."
 
-## 5 · SENSORS — 1.5min
-- Frame: **"You barely have to build anything. Existing tools pair beautifully with agents."**
-- Card 1: agents write god-files → my 300-line limit script. "And the agent runs it ITSELF."
-- Card 2: agents over-engineer → scc counts complexity. "Numbers call it out before I do."
-- Card 3: agents leave dead code → skylos hunts the ghosts.
-- Close: **"The pattern: every check speaks in errors the agent can act on."**
+## 5 · SENSORS — 2min ← INTERACTIVE (click the stage)
+- Frame: **"You barely have to build anything. Existing tools pair beautifully with agents. Watch three of them actually work."**
+- ACT 1 — 300 lines (4 clicks): "Agents write god-files. Here comes one…"
+  → counter blows past 300 → ✗ "sensor says no." → **"and the agent READS that error and splits the file ITSELF."** → ✓
+  → **"This literally happened building tonight's app."**
+- ACT 2 — scc (4 clicks): "Agents over-engineer. Look at this nesting…"
+  → complexity 24 ✗ → flattens to early returns → ✓ "numbers call it out before I do."
+- ACT 3 — skylos (4 clicks): "Agents leave orphans behind."
+  → 👻 zero callers ✗ → ghost dissolves → ✓
+- Close: **"Same loop three times: attempt, error, self-correct, pass. Every check speaks in errors the agent can act on."**
 
-## 6 · DOCUMENTATION — 1min
-- **"Docs aren't for humans anymore. They're executable context."**
-- "Architecture notes — so it extends MY design, not a parallel one it invented."
-- "Conventions — so I never type the same code-review comment twice."
-- "And the flow keeps them alive. Docs update with every feature. Not a wiki that rots."
+## 6 · DOCUMENTATION — 1min ← INTERACTIVE (one click)
+- (point left) "Same prompt: add refunds. Agent WITHOUT docs: invents
+  RefundManager2, wrong folder, new parallel pattern. Technically works. Ruins your codebase."
+- **CLICK "load the docs"** (chips fly in)
+- (point right) **"Same model. Same prompt. Now it lands in payments/, follows MY pattern."**
+- **"The diff changed because the CONTEXT changed. Docs are executable now."**
+- "And the flow keeps them alive — docs update with every feature. Not a wiki that rots."
 
 ## 7 · SKILLS — 1min ← for the devs
 - "One more feedforward trick. The biggest lever: **skills**."

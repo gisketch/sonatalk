@@ -49,12 +49,12 @@ export const slides: SlideDef[] = [
   {
     component: SensorsSlide,
     notes:
-      "1.5 min. The feedback half. Frame: there are existing tools that pair BEAUTIFULLY with agents — you don't have to build much. Each card = a mistake agents actually make → the sensor that catches it. The 300-line one is my own script the agent runs itself.",
+      "1.5-2 min INTERACTIVE. Click the stage to run each sensor: attempt → terminal error → self-correct → pass (4 clicks per act, 3 acts). 300-line: file blows past the limit, agent SPLITS it (say: this literally happened building tonight's app). scc: nesting flattens. skylos: the ghost dissolves. Fast-clicking is safe. Land the pattern line at the end.",
   },
   {
     component: DocsSlide,
     notes:
-      "1 min. The feedforward half. Docs aren't an afterthought for humans anymore — they're executable context the agent loads before writing a line. And the system keeps them alive: features update the docs as part of the flow.",
+      "1 min INTERACTIVE. Left pane: agent alone invents RefundManager2 in the wrong folder. ONE click ('load the docs') — chips fly into context, right pane lands in payments/ following the house pattern. Punchline: same model, same prompt, the DIFF changed because the CONTEXT changed.",
   },
   {
     component: SkillsSlide,

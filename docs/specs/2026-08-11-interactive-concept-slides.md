@@ -51,6 +51,22 @@ Split stage, same prompt on both sides ("add refunds to payments"):
 One click, one punchline: docs are executable context — the diff changes because the
 context changed.
 
+### Slide 4 · Sonata "My Harness" — the two-lane machine (approved, build next)
+
+For the visual learners: the two cards become one continuously-running assembly line —
+no clicks, it just breathes while the presenter talks (45s beat).
+
+- **Top lane — SKILLS THAT BUILD (feedforward, clay):** an idea chip travels through
+  four stamped stations — `grill → spec → tickets → implement` — each station lights and
+  stamps it as it passes; out the end drops a `code` box. Loops.
+- **Bottom lane — CHECKS THAT VALIDATE (feedback, ink):** the code box rides through
+  three scanner arches — `lint · tests · 300-gate` — each arch sweeps a scan beam and
+  pops a ✓; out the end: a **trusted diff** card with a small crown-of-checks.
+- The two lanes connect: build lane output feeds the check lane input — one machine,
+  two halves, matching slide 3's vocabulary (clay = feedforward, ink = feedback).
+- Implementation: SMIL/CSS loop like FlowSlide's traveling pulses (rAF-proof); one new
+  component; existing card copy moves into two compact lane labels + footline.
+
 ## In Scope
 
 - Rebuild `SensorsSlide` as the 3-act gate simulation (new components under
