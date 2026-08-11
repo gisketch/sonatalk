@@ -140,7 +140,7 @@ function stroopPrompt() {
   return {
     text: COLORS[word][0],
     ink: COLORS[ink][1],
-    sub: 'ink matches word?',
+    sub: 'COLOR matches word?',
     expected: match ? 'right' : 'left',
     mode: 'yesno',
   }

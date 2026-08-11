@@ -212,14 +212,19 @@
     gap: 0.1rem; padding: 0.3rem 0.2rem 0.15rem; border-radius: 0.7rem;
     transition: opacity 0.4s, transform 0.4s, background 0.25s, box-shadow 0.25s;
   }
+  /* verdict tint sits OVER the drawing (multiply keeps the strokes visible) */
+  .pl::after {
+    content: ''; position: absolute; inset: 0; border-radius: 0.7rem;
+    pointer-events: none; mix-blend-mode: multiply; transition: background 0.25s;
+  }
+  .pl.good::after { background: rgba(107, 143, 94, 0.4); }
+  .pl.bad::after { background: rgba(192, 57, 43, 0.35); }
   .pl.good {
-    background: rgba(107, 143, 94, 0.18);
     box-shadow: 0 0 0 2px rgba(107, 143, 94, 0.55);
     animation: verdictPop 0.3s ease;
   }
   .pl.good figcaption { color: #3d6b2f; }
   .pl.bad {
-    background: rgba(192, 57, 43, 0.12);
     box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.45);
     animation: verdictShake 0.35s ease;
   }
