@@ -16,6 +16,7 @@ import ClosingSlide from './slides/ClosingSlide.svelte'
 import GameSlide from './slides/GameSlide.svelte'
 import RaceSlide from './slides/RaceSlide.svelte'
 import GauntletSlide from './slides/GauntletSlide.svelte'
+import ChampionsSlide from './slides/ChampionsSlide.svelte'
 
 export interface SlideDef {
   component: Component
@@ -109,6 +110,11 @@ export const slides: SlideDef[] = [
   {
     component: GauntletSlide,
     notes:
-      "POST-TALK GAME 3 — the finale, best prize. Rapid commands on THIS screen (phones are blind pads): TAP LEFT/RIGHT, TAP TWICE, DON'T TAP, quick math, logic, color tricks. Wrong or slow = out; a full-wipe round kills nobody. Presenter clicks each 'next command' — milk the beats. Window shrinks every round until ONE survives → crown. TV DELAY control keeps the window fair over AirPlay.",
+      "POST-TALK GAME 3 — the finale, best prize. One click starts it; rounds auto-run and accelerate. Phones: giant TAP pad for count commands, YES/NO for questions. Every correct answer scores; the round NOBODY gets ends it — top score wins, ties go to sudden death. Roasts + 🔥 streaks on the results beats. Crown → 'the podium'.",
+  },
+  {
+    component: ChampionsSlide,
+    notes:
+      "THE PODIUM — final image of the night. All three champions dancing on the blocks (gauntlet champ center on the tall one), everyone else dancing below as the crowd, unlimited confetti. Hand out the prizes, take the group photo. M mutes sounds if needed.",
   },
 ]

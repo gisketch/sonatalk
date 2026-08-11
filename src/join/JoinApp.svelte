@@ -15,16 +15,21 @@
   let players = $state<Snapshot['players']>([])
   let dead = $state(false)
   let champion = $state(false)
+  let killer = $state<{ id: string; name: string } | null>(null)
 
   const link = connect(
     { role: 'phone' },
     (msg) => {
       if (msg.type === 'you') myId = msg.id
-      if (msg.type === 'eliminated') dead = true
+      if (msg.type === 'eliminated') {
+        dead = true
+        killer = msg.by ?? null
+      }
       if (msg.type === 'winner') champion = true
       if (msg.type === 'reset') {
         dead = false
         champion = false
+        killer = null
       }
       // Full session reset: reload rejoins this phone as a brand-new player.
       if (msg.type === 'kicked') location.reload()
@@ -112,8 +117,15 @@
     />
   {:else if phase === 'battle' && dead}
     <div class="bigmoji">💀</div>
-    <p class="phone-title">Eliminated!</p>
-    <p class="phone-note">Your character fought bravely. Watch the big screen.</p>
+    {#if killer}
+      <!-- death-cam: face your killer -->
+      <img class="killer-cam" src={`/api/drawing/${killer.id}`} alt={killer.name} onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = 'none')} />
+      <p class="phone-title">{killer.name} did this to you.</p>
+      <p class="phone-note">Remember that face. Watch the big screen.</p>
+    {:else}
+      <p class="phone-title">Eliminated!</p>
+      <p class="phone-note">Your character fought bravely. Watch the big screen.</p>
+    {/if}
   {:else if phase === 'battle'}
     <div class="bigmoji">⚔️</div>
     <p class="phone-title">Your character is in the arena.</p>

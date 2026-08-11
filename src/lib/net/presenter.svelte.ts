@@ -96,8 +96,8 @@ class Presenter {
     this.#send?.({ type: 'gauntletStart', displayLagMs: this.displayLagMs })
   }
 
-  eliminate(playerId: string) {
-    this.#send?.({ type: 'eliminate', playerId })
+  eliminate(playerId: string, by?: string) {
+    this.#send?.({ type: 'eliminate', playerId, ...(by ? { by } : {}) })
   }
 
   crown(survivors: string[]) {

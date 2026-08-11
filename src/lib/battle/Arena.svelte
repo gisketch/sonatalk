@@ -6,6 +6,7 @@
   import {
     ARENA_H, ARENA_W, createBattle, findWinner, step, type BattleState,
   } from './engine'
+  import { airhorn, popKill } from '../sfx'
   import { TEAMS, type Team } from './rps'
   import Killfeed from './Killfeed.svelte'
   import WinnerOverlay from './WinnerOverlay.svelte'
@@ -144,8 +145,9 @@
       const dt = Math.min(1 / 30, elapsed)
       const events = step(battle, dt)
       for (const ev of events) {
-        if (live) presenter.eliminate(ev.id) // 💀 to that phone
+        if (live) presenter.eliminate(ev.id, ev.by) // 💀 + death-cam to that phone
         announceKill(ev.id, ev.by)
+        popKill()
       }
       elapsed -= dt
     }
@@ -179,6 +181,7 @@
 
   function toWinners() {
     if (live) presenter.advance('winners', { team: winner, survivors: survivors.map((s) => s.id) })
+    airhorn()
   }
 
   const isChampion = $derived(!!winner && survivors.length === 1)

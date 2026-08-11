@@ -135,7 +135,13 @@ Total budget ~10 min with the game. Hotkeys: `N` notes · `F` fullscreen · `O` 
 - Commands: TAP ONCE/TWICE, DON'T TAP, quick math, logic, color tricks
   (read the INK, not the word). Windows shrink every round.
 - Tie at the end → SUDDEN DEATH among the leaders, everyone else watches.
-- Winner → **crown the champion** → hand over the big prize.
+- Winner → **crown the champion** → **"the podium"**.
+
+## 18 · The Podium (final image)
+
+- All three champions dancing on the blocks — gauntlet champ center on the tall one.
+- Everyone else dancing below as the crowd. Unlimited confetti.
+- **Hand out the prizes. Take the group photo.** `M` mutes sounds if the room needs it.
 
 ---
 

@@ -82,20 +82,6 @@ function letterCountPrompt() {
   return yesno(`${word} has ${claim} letters`, truthy)
 }
 
-/** 3 · 6 · 12 · next = 24 — arithmetic and doubling runs */
-function sequencePrompt(round) {
-  const tier = tierFor(round)
-  const geometric = Math.random() < 0.45
-  const start = 2 + rand(6)
-  const k = 2 + rand(4 + tier * 2)
-  const seq = geometric
-    ? [start, start * 2, start * 4]
-    : [start, start + k, start + 2 * k]
-  const real = geometric ? start * 8 : start + 3 * k
-  const truthy = Math.random() < 0.5
-  const claim = truthy ? real : real + pickOne(tier >= 2 ? [-2, -1, 1, 2] : [-4, -2, 2, 4])
-  return yesno(`${seq.join(' · ')} · next = ${claim}`, truthy)
-}
 
 const LOGIC_FACTS = [
   ['🪨 beats ✂️', true], ['✂️ beats 📄', true], ['📄 beats 🪨', true],
@@ -160,8 +146,7 @@ export function generateRound(round) {
       [late ? 3 : 2, stroopPrompt],
       [late ? 2 : 1, () => countPrompt(round)],
       [late ? 2 : 1, () => comparePrompt(round)],
-      [1, letterCountPrompt],
-      [late ? 2 : 1, () => sequencePrompt(round)],
+      [late ? 2 : 1, letterCountPrompt],
     ]
     const total = pool.reduce((s, [w]) => s + w, 0)
     let roll = Math.random() * total

@@ -13,6 +13,8 @@ export interface PlayerInfo {
   steps: number
   /** gauntlet score — correct answers this game */
   score: number
+  /** gauntlet: consecutive correct answers */
+  streak: number
 }
 
 export interface Champion {
@@ -32,7 +34,7 @@ export interface Snapshot {
 export type ServerMessage =
   | Snapshot
   | { type: 'you'; id: string }
-  | { type: 'eliminated' }
+  | { type: 'eliminated'; by?: { id: string; name: string } }
   | { type: 'winner' }
   | { type: 'reset' }
   | { type: 'kicked' }

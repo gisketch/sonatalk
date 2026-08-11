@@ -2,6 +2,7 @@
   import { fx } from '../fx'
   import LagControl from '../components/LagControl.svelte'
   import { presenter } from '../net/presenter.svelte'
+  import { airhorn, beep } from '../sfx'
 
   /** onnext: after the crown, advance to the next game (talk deck only; test page replays) */
   let { onnext }: { onnext?: () => void } = $props()
@@ -87,8 +88,20 @@
   function crown() {
     if (!winner) return
     presenter.crown([winner.id])
-    presenter.advance('winners', { survivors: [winner.id] })
+    // winner rides along so the post-crown control (next game) stays reachable
+    presenter.advance('winners', { survivors: [winner.id], winner })
+    airhorn()
   }
+
+  // countdown beeps: 3-2-1 low, GO high
+  let lastBeep = -1
+  $effect(() => {
+    if (!racing || winner) return
+    if (countdown !== lastBeep && countdown <= 3) {
+      lastBeep = countdown
+      beep(countdown === 0)
+    }
+  })
 </script>
 
 <div class="race-wrap" use:fx={{ d: 0.25 }}>

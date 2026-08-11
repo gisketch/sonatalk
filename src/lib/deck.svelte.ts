@@ -1,4 +1,5 @@
 import { presenter } from './net/presenter.svelte'
+import { toggleMute } from './sfx'
 
 /** Deck navigation state — the shell owns this; slides never touch it. */
 class Deck {
@@ -35,6 +36,7 @@ class Deck {
     } else if (e.key === 'Home') this.go(0)
     else if (e.key === 'End') this.go(this.count - 1)
     else if (e.key.toLowerCase() === 'n') this.showNotes = !this.showNotes
+    else if (e.key.toLowerCase() === 'm') toggleMute()
     else if (e.key.toLowerCase() === 'o') presenter.forceOffline = !presenter.forceOffline
     // Shift+R so a stray keypress can't nuke the session mid-talk
     else if (e.key.toLowerCase() === 'r' && e.shiftKey) {

@@ -24,7 +24,7 @@ export function createSession() {
 export function addPlayer(session) {
   const player = {
     id: randomUUID(), name: null, pick: null, alive: true, hasDrawing: false,
-    ready: false, spawn: null, steps: 0, foot: null, score: 0,
+    ready: false, spawn: null, steps: 0, foot: null, score: 0, streak: 0,
   }
   session.players.set(player.id, player)
   return player
@@ -167,7 +167,7 @@ export function snapshot(session) {
     champions: session.champions,
     players: [...session.players.values()].map((p) => ({
       id: p.id, name: p.name, pick: p.pick, alive: p.alive, hasDrawing: p.hasDrawing,
-      ready: p.ready, spawn: p.spawn, steps: p.steps, score: p.score,
+      ready: p.ready, spawn: p.spawn, steps: p.steps, score: p.score, streak: p.streak,
     })),
   }
 }

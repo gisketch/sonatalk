@@ -146,7 +146,12 @@ export function attachWs(httpServer, session, presenterToken) {
           const player = session.players.get(msg.playerId)
           if (player) {
             player.alive = false
-            sendTo(msg.playerId, { type: 'eliminated' })
+            // death-cam: tell the victim who did it (null = presenter kill-switch)
+            const killer = msg.by ? session.players.get(msg.by) : null
+            sendTo(msg.playerId, {
+              type: 'eliminated',
+              ...(killer ? { by: { id: killer.id, name: killer.name ?? 'anon' } } : {}),
+            })
             broadcast()
           }
         }

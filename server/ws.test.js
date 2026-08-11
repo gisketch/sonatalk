@@ -97,6 +97,27 @@ describe('ws roles', () => {
     phone.socket.close()
   })
 
+  it('eliminate carries the killer for the death-cam', async () => {
+    const presenter = await client({ role: 'presenter', token: TOKEN })
+    const victim = await client({ role: 'phone' })
+    const hunter = await client({ role: 'phone' })
+    await wait()
+    const [victimId, hunterId] = [...session.players.keys()]
+    session.players.get(hunterId).name = 'Bo'
+    send(presenter.socket, { type: 'eliminate', playerId: victimId, by: hunterId })
+    await wait()
+    const death = victim.messages.find((m) => m.type === 'eliminated')
+    expect(death.by).toEqual({ id: hunterId, name: 'Bo' })
+    // kill-switch has no killer
+    send(presenter.socket, { type: 'eliminate', playerId: hunterId })
+    await wait()
+    const modDeath = hunter.messages.find((m) => m.type === 'eliminated')
+    expect(modDeath.by).toBeUndefined()
+    presenter.socket.close()
+    victim.socket.close()
+    hunter.socket.close()
+  })
+
   it('presenter reset wipes the roster and kicks every phone', async () => {
     const presenter = await client({ role: 'presenter', token: TOKEN })
     const phone = await client({ role: 'phone' })

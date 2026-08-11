@@ -2,10 +2,12 @@
   import { fx } from '../fx'
   import LagControl from '../components/LagControl.svelte'
   import { presenter } from '../net/presenter.svelte'
+  import { airhorn, tick, womp } from '../sfx'
+  import GauntletWall from './GauntletWall.svelte'
   import { buildLabel, buildRoast } from './lines'
 
-  /** finale: last game of the night — after the crown there is no next game */
-  let { finale = false }: { finale?: boolean } = $props()
+  /** finale: last game — after the crown, onnext leads to the podium */
+  let { finale = false, onnext }: { finale?: boolean; onnext?: () => void } = $props()
 
   let now = $state(Date.now())
   $effect(() => {
@@ -49,13 +51,16 @@
     const url = presenter.drawings[id]
     return url && url !== 'pending' ? url : null
   }
-  const size = $derived(wall.length > 12 ? 2.4 : wall.length > 8 ? 2.9 : 3.4)
   const benched = (id: string) => tiebreak && leaderIds.length > 0 && !leaderIds.includes(id)
-  /** results moment: green for the sharp, red for the missed */
-  const verdictFor = (id: string) => {
-    if (stage !== 'results' || winner || benched(id)) return ''
-    return correctIds.includes(id) ? 'good' : 'bad'
-  }
+
+  const onFire = $derived.by(() => {
+    if (stage !== 'results' || winner) return ''
+    const hot = wall.filter((p) => p.streak >= 3).map((p) => p.name ?? 'anon')
+    if (!hot.length) return ''
+    if (hot.length === 1) return `🔥 ${hot[0]} is ON FIRE`
+    if (hot.length === 2) return `🔥 ${hot[0]} and ${hot[1]} are ON FIRE`
+    return `🔥 ${hot.length} players are ON FIRE`
+  })
 
   const missRoast = $derived.by(() => {
     if (stage !== 'results' || correctCount === 0 || winner) return ''
@@ -87,8 +92,27 @@
   function crown() {
     if (!winner) return
     presenter.crown([winner.id])
-    presenter.advance('winners', { survivors: [winner.id] })
+    // winner rides along so the post-crown control (podium/next) stays reachable
+    presenter.advance('winners', { survivors: [winner.id], winner })
+    airhorn()
   }
+
+  // Timer ticks while a command is live; urgent pitch in the last stretch.
+  // `fuse` is read inside the interval callback — async reads are NOT tracked by
+  // $effect (Svelte 5), so this effect re-runs only on stage/winner changes.
+  $effect(() => {
+    if (stage !== 'prompt' || !!winner) return
+    const t = setInterval(() => tick(fuse < 0.35), 500)
+    return () => clearInterval(t)
+  })
+  // one womp per roast beat
+  let womped = -1
+  $effect(() => {
+    if (stage === 'results' && round !== womped && correctCount > 0 && missRoast) {
+      womped = round
+      womp()
+    }
+  })
 </script>
 
 <div class="gauntlet-wrap" use:fx={{ d: 0.25 }}>
@@ -127,6 +151,9 @@
         {#if missRoast}
           <p class="roast">{missRoast}</p>
         {/if}
+        {#if onFire}
+          <p class="fire">{onFire}</p>
+        {/if}
       {/if}
     </div>
   {:else}
@@ -135,25 +162,15 @@
     </div>
   {/if}
 
-  <div class="wall">
-    {#each wall as p (p.id)}
-      <figure class="pl {verdictFor(p.id)}" class:out={benched(p.id)} style:width="{size}rem">
-        {#if avatar(p.id)}
-          <img src={avatar(p.id)} alt={p.name ?? 'player'} style:width="{size}rem" style:height="{size}rem" />
-        {:else}
-          <span class="blank" style:width="{size}rem" style:height="{size}rem">{(p.name ?? '?').slice(0, 1).toUpperCase()}</span>
-        {/if}
-        <span class="scorechip">{p.score}</span>
-        <figcaption>{p.name ?? 'anon'}</figcaption>
-      </figure>
-    {/each}
-  </div>
+  <GauntletWall />
 </div>
 <div class="gauntlet-ctl">
   {#if winner && !crowned}
     <button class="btn" onclick={crown}>crown the champion →</button>
   {:else if winner && crowned}
-    {#if finale}
+    {#if finale && onnext}
+      <button class="btn" onclick={onnext}>the podium →</button>
+    {:else if finale}
       <span class="wait">that's the night — champions up top 👑</span>
     {:else}
       <button class="btn" onclick={begin}>↺ run it again</button>
@@ -213,62 +230,14 @@
   @keyframes gSway { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
   @keyframes gHop { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-12px) scale(1.1); } 60% { transform: translateY(-4px) scale(0.96); } }
 
-  .wall {
-    flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: center;
-    align-items: flex-end; gap: 0.4rem 0.7rem; padding: 0.6rem 1rem 0.8rem;
-    border-top: 1px dashed var(--line);
-  }
-  .pl {
-    position: relative; display: flex; flex-direction: column; align-items: center;
-    gap: 0.1rem; padding: 0.3rem 0.2rem 0.15rem; border-radius: 0.7rem;
-    transition: opacity 0.4s, transform 0.4s, background 0.25s, box-shadow 0.25s;
-  }
-  /* verdict tint sits OVER the drawing (multiply keeps the strokes visible) */
-  .pl::after {
-    content: ''; position: absolute; inset: 0; border-radius: 0.7rem;
-    pointer-events: none; mix-blend-mode: multiply; transition: background 0.25s;
-  }
-  .pl.good::after { background: rgba(107, 143, 94, 0.4); }
-  .pl.bad::after { background: rgba(192, 57, 43, 0.35); }
-  .pl.good {
-    box-shadow: 0 0 0 2px rgba(107, 143, 94, 0.55);
-    animation: verdictPop 0.3s ease;
-  }
-  .pl.good figcaption { color: #3d6b2f; }
-  .pl.bad {
-    box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.45);
-    animation: verdictShake 0.35s ease;
-  }
-  .pl.bad figcaption { color: #a03325; }
-  @keyframes verdictPop {
-    40% { transform: translateY(-6px) scale(1.06); }
-  }
-  @keyframes verdictShake {
-    25% { transform: translateX(-4px); }
-    50% { transform: translateX(3px); }
-    75% { transform: translateX(-2px); }
-  }
-  .pl img { object-fit: contain; }
-  .pl .blank {
-    border-radius: 50%; border: 1px solid var(--line); background: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); color: var(--muted);
-  }
-  .pl figcaption {
-    font-family: var(--mono); font-size: 0.54rem; color: var(--ink-soft);
-    max-width: 4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .pl.out { opacity: 0.28; filter: grayscale(1); }
-  .scorechip {
-    position: absolute; top: -0.5rem; right: -0.4rem;
-    font-family: var(--mono); font-size: 0.58rem; color: var(--clay-deep);
-    background: var(--paper); border: 1px solid var(--clay); border-radius: 999px;
-    min-width: 1.2rem; text-align: center; padding: 0.05rem 0.25rem;
-  }
   .sub.hot { color: var(--clay-deep); }
   .roast {
     font-family: var(--mono); font-size: clamp(0.68rem, 1.4vw, 0.9rem); color: var(--clay-deep);
     letter-spacing: 0.06em; animation: roastIn 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+  .fire {
+    font-family: var(--mono); font-size: clamp(0.72rem, 1.5vw, 0.95rem); color: #C9A227;
+    letter-spacing: 0.08em; animation: roastIn 0.4s cubic-bezier(0.2, 1.6, 0.4, 1) 0.15s backwards;
   }
   @keyframes roastIn {
     0% { transform: translateY(8px) scale(0.85); opacity: 0; }

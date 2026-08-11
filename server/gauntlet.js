@@ -88,6 +88,7 @@ export function resolveRound(session, connectedIds) {
     ? everyone.filter((p) => session.gauntletLeaders.includes(p.id))
     : everyone
   const correct = field.filter((p) => isCorrect(expected, session.gauntletTaps.get(p.id) ?? []))
+  for (const p of field) p.streak = correct.includes(p) ? p.streak + 1 : 0
   for (const p of correct) p.score += 1
 
   let winner = null
@@ -137,6 +138,7 @@ export function startGauntlet(session) {
     player.steps = 0
     player.foot = null
     player.score = 0
+    player.streak = 0
   }
   session.phase = 'gauntlet'
   session.gauntletRound = 0
