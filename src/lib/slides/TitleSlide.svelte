@@ -21,13 +21,14 @@
 </div>
 
 <style>
+  /* title slide is always dark — colors are explicit, not theme vars */
   .defn {
     margin-top: 1.4rem; max-width: 34rem;
     font-family: var(--mono); font-size: clamp(0.72rem, 1.5vw, 0.92rem);
-    line-height: 1.65; color: var(--muted); letter-spacing: 0.02em;
+    line-height: 1.65; color: #9b968a; letter-spacing: 0.02em;
     border-left: 2px solid var(--clay); padding-left: 1rem;
   }
-  .defn b { color: var(--ink-soft); font-weight: 500; }
-  .defn i { color: var(--line); font-style: normal; }
-  .defn u { text-decoration-color: var(--clay); text-underline-offset: 3px; }
+  .defn b { color: #ece9e0; font-weight: 500; }
+  .defn i { color: #6d6960; font-style: normal; }
+  .defn u { text-decoration-color: var(--clay); text-underline-offset: 3px; color: #c9c4b8; }
 </style>
