@@ -125,9 +125,6 @@
   {:else}
     <div class="center">
       <p class="gtitle small">{inGauntlet ? 'ready.' : 'the final game'}</p>
-      <p class="sub">
-        every correct answer scores. the round NOBODY gets ends it — top score takes the prize.
-      </p>
     </div>
   {/if}
 
