@@ -48,8 +48,8 @@
 
     <g class="fx" style="--d:1.7s">
       <path d="M 855 272 L 855 361 L 626 361" fill="none" stroke="#7A776E" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrInk)"/>
-      <path d="M 374 361 L 296 361 Q 276 361 276 341 L 276 300 Q 276 286 290 286 L 366 286" fill="none" stroke="#7A776E" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrInk)"/>
-      <text x="315" y="330" text-anchor="middle" font-size="13" fill="#7A776E" font-style="italic">self-correct</text>
+      <path d="M 374 361 L 296 361 Q 276 361 276 341 L 276 255 Q 276 240 291 240 L 368 240" fill="none" stroke="#7A776E" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrInk)"/>
+      <text x="316" y="330" text-anchor="middle" font-size="13" fill="#7A776E" font-style="italic">self-correct</text>
     </g>
 
     <!-- traveling pulses -->
@@ -66,7 +66,7 @@
       <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.08;.9;1" dur="3.2s" begin="3.2s" repeatCount="indefinite"/>
     </circle>
     <circle r="4.5" fill="#7A776E" opacity="0">
-      <animateMotion dur="3.2s" begin="4.2s" repeatCount="indefinite" path="M 374 361 L 296 361 Q 276 361 276 341 L 276 300 Q 276 286 290 286 L 366 286"/>
+      <animateMotion dur="3.2s" begin="4.2s" repeatCount="indefinite" path="M 374 361 L 296 361 Q 276 361 276 341 L 276 255 Q 276 240 291 240 L 368 240"/>
       <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.08;.9;1" dur="3.2s" begin="4.2s" repeatCount="indefinite"/>
     </circle>
   </svg>
