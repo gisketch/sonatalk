@@ -129,10 +129,10 @@ Total budget ~10 min with the game. Hotkeys: `N` notes · `F` fullscreen · `O` 
 
 - "Best prize. Obey THIS screen. Every correct answer scores. The round NOBODY gets
   right ends the game — top score takes the prize."
-- Phones: commands = arrow pads (spam away on TAP TWICE), questions = **green YES /
-  red NO** — first tap locks in.
+- Phones: count commands = ONE giant TAP pad (exact counts: once=1, twice=2, don't=0),
+  questions = **green YES / red NO** — first tap locks in.
 - **One click ("start") — it runs itself.** You just narrate the carnage.
-- Commands: TAP LEFT/RIGHT/TWICE, DON'T TAP, quick math, logic, color tricks
+- Commands: TAP ONCE/TWICE, DON'T TAP, quick math, logic, color tricks
   (read the INK, not the word). Windows shrink every round.
 - Tie at the end → SUDDEN DEATH among the leaders, everyone else watches.
 - Winner → **crown the champion** → hand over the big prize.

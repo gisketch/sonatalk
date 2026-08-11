@@ -19,13 +19,15 @@ export function windowFor(round) {
 const rand = (n) => Math.floor(Math.random() * n)
 const pickOne = (arr) => arr[rand(arr.length)]
 
-/** expected: 'left' | 'right' | 'double' | 'none' · mode: 'arrows' | 'yesno' */
+/**
+ * expected: 'left' | 'right' (yes/no) | 'once' | 'double' | 'none' (single tap pad)
+ * mode: 'tap' (one big pad, count matters) | 'yesno' (NO left / YES right)
+ */
 function reflexPrompt() {
   return pickOne([
-    { text: 'TAP LEFT', sub: 'left pad. now.', expected: 'left', mode: 'arrows' },
-    { text: 'TAP RIGHT', sub: 'right pad. now.', expected: 'right', mode: 'arrows' },
-    { text: 'TAP TWICE', sub: 'any pads — two taps', expected: 'double', mode: 'arrows' },
-    { text: "DON'T TAP", sub: 'discipline.', expected: 'none', mode: 'arrows' },
+    { text: 'TAP ONCE', sub: 'exactly one tap', expected: 'once', mode: 'tap' },
+    { text: 'TAP TWICE', sub: 'exactly two taps', expected: 'double', mode: 'tap' },
+    { text: "DON'T TAP", sub: 'discipline.', expected: 'none', mode: 'tap' },
   ])
 }
 
@@ -155,8 +157,9 @@ export function recordTap(session, id, side, now) {
 
 function isCorrect(expected, taps) {
   if (expected === 'none') return taps.length === 0
-  if (expected === 'double') return taps.length >= 2
-  return taps.length > 0 && taps[0] === expected
+  if (expected === 'once') return taps.length === 1
+  if (expected === 'double') return taps.length === 2
+  return taps.length > 0 && taps[0] === expected // yes/no: first answer counts
 }
 
 const asName = (p) => ({ id: p.id, name: p.name ?? 'anon' })

@@ -50,9 +50,8 @@
   const label = $derived.by(() => {
     if (mode === 'yesno') return correct === 'right' ? 'YES was correct' : 'NO was correct'
     return {
-      left: '← LEFT was the move',
-      right: 'RIGHT was the move →',
-      double: 'two taps was the move',
+      once: 'exactly ONE tap was the move',
+      double: 'exactly TWO taps was the move',
       none: 'the move was NOT to tap',
     }[correct] ?? ''
   })

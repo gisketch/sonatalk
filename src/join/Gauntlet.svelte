@@ -19,7 +19,7 @@
   // Blind controller: NO prompt here — eyes on the big screen. The server's broadcast
   // state (not the phone clock) opens the pads, so clock skew can't shrink anyone's window.
   const stage = $derived(String(payload.state ?? 'idle'))
-  const mode = $derived(String(payload.mode ?? 'arrows'))
+  const mode = $derived(String(payload.mode ?? 'tap'))
   const open = $derived(stage === 'prompt')
   const round = $derived(Number(payload.round ?? 0))
   const tiebreak = $derived(payload.tiebreak === true)
@@ -104,16 +104,12 @@
           disabled={!open || !!locked}
           onpointerdown={(e) => { e.preventDefault(); tap('right') }}>YES</button>
       {:else}
+        <!-- count commands (TAP ONCE / TWICE / DON'T TAP): one giant pad, count is everything.
+             No remount per tap — rapid taps must never race a recreated button. -->
         <button
-          class="pad"
-          class:thump={pulse % 2 === 1}
+          class="pad big"
           disabled={!open}
-          onpointerdown={(e) => { e.preventDefault(); tap('left') }}>←</button>
-        <button
-          class="pad"
-          class:thump={pulse % 2 === 0 && pulse > 0}
-          disabled={!open}
-          onpointerdown={(e) => { e.preventDefault(); tap('right') }}>→</button>
+          onpointerdown={(e) => { e.preventDefault(); tap('left') }}>TAP</button>
       {/if}
     </div>
   {/if}
@@ -174,8 +170,5 @@
   .pad.yes { background: rgba(107, 143, 94, 0.14); border-color: #6b8f5e; color: #3d6b2f; }
   .pad.no { background: rgba(192, 57, 43, 0.11); border-color: #c0392b; color: #a03325; }
   .pad.yes:disabled, .pad.no:disabled { opacity: 0.3; }
-  .pad.thump { animation: thump 0.16s ease; }
-  @keyframes thump {
-    40% { transform: scale(0.9) rotate(-2deg); }
-  }
+  .pad.big { padding: 4.6rem 0; font-size: 2.1rem; letter-spacing: 0.2em; }
 </style>

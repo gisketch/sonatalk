@@ -28,15 +28,31 @@ describe('gauntlet engine (score attack)', () => {
     expect(windowFor(999)).toBe(WINDOW_FLOOR_MS)
   })
 
-  it('prompts are valid; yes/no rounds carry yesno mode with YES = right', () => {
+  it('prompts are valid; count commands ride the single tap pad', () => {
     for (let round = 1; round <= 40; round++) {
       const spec = generateRound(round)
-      expect(['left', 'right', 'double', 'none']).toContain(spec.expected)
-      expect(['arrows', 'yesno']).toContain(spec.mode)
-      if (spec.expected === 'double' || spec.expected === 'none') {
-        expect(spec.mode).toBe('arrows')
-      }
+      expect(['left', 'right', 'once', 'double', 'none']).toContain(spec.expected)
+      expect(['tap', 'yesno']).toContain(spec.mode)
+      if (['once', 'double', 'none'].includes(spec.expected)) expect(spec.mode).toBe('tap')
+      else expect(spec.mode).toBe('yesno')
     }
+  })
+
+  it('count commands are exact: once=1, twice=2, none=0', () => {
+    const { s, players } = arena(['A', 'B', 'C', 'D'])
+    force(s, 'once')
+    recordTap(s, players[0].id, 'left', tapAt(s)) // exactly one ✓
+    recordTap(s, players[1].id, 'left', tapAt(s)) // two taps ✗
+    recordTap(s, players[1].id, 'left', tapAt(s))
+    resolveRound(s)
+    expect(players.map((p) => p.score)).toEqual([1, 0, 0, 0])
+
+    force(s, 'double')
+    recordTap(s, players[0].id, 'left', tapAt(s)) // one ✗
+    for (let i = 0; i < 2; i++) recordTap(s, players[1].id, 'left', tapAt(s)) // two ✓
+    for (let i = 0; i < 3; i++) recordTap(s, players[2].id, 'left', tapAt(s)) // three ✗
+    resolveRound(s)
+    expect(players.map((p) => p.score)).toEqual([1, 1, 0, 0])
   })
 
   it('display lag shifts the window; expected never leaks into the payload', () => {
