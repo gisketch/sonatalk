@@ -1,5 +1,7 @@
 /** Minimal WS client shared by the phone app and the deck's presenter client. */
 
+import { noteSample } from './clock'
+
 export interface PlayerInfo {
   id: string
   name: string | null
@@ -33,6 +35,7 @@ export interface Snapshot {
 
 export type ServerMessage =
   | Snapshot
+  | { type: 'pong'; t0: number; now: number }
   | { type: 'you'; id: string }
   | { type: 'eliminated'; by?: { id: string; name: string } }
   | { type: 'winner' }
@@ -50,22 +53,53 @@ export function connect(
   onOpenChange?: (open: boolean) => void,
 ): { send: (obj: Record<string, unknown>) => void; close: () => void } {
   const socket = new WebSocket(wsUrl())
+  const send = (obj: Record<string, unknown>) => {
+    if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(obj))
+  }
+
+  // Clock sync: a burst right after connect converges fast, then a slow trickle keeps
+  // the estimate honest across the night. Timers are cleared with the socket.
+  const timers: ReturnType<typeof setTimeout>[] = []
+  const ping = () => send({ type: 'ping', t0: Date.now() })
+  const startSync = () => {
+    for (const delay of [0, 250, 700, 1_500, 3_000]) timers.push(setTimeout(ping, delay))
+    timers.push(setInterval(ping, 20_000) as unknown as ReturnType<typeof setTimeout>)
+  }
+  const stopSync = () => {
+    for (const t of timers) {
+      clearTimeout(t)
+      clearInterval(t as unknown as ReturnType<typeof setInterval>)
+    }
+    timers.length = 0
+  }
+
   socket.addEventListener('open', () => {
-    socket.send(JSON.stringify({ type: 'hello', ...hello }))
+    send({ type: 'hello', ...hello })
+    startSync()
     onOpenChange?.(true)
   })
-  socket.addEventListener('close', () => onOpenChange?.(false))
+  socket.addEventListener('close', () => {
+    stopSync()
+    onOpenChange?.(false)
+  })
   socket.addEventListener('message', (e) => {
+    let msg: ServerMessage
     try {
-      onMessage(JSON.parse(e.data))
+      msg = JSON.parse(e.data)
     } catch {
-      /* malformed frame — ignore */
+      return /* malformed frame — ignore */
     }
+    if (msg.type === 'pong') {
+      noteSample(msg.t0, msg.now, Date.now())
+      return
+    }
+    onMessage(msg)
   })
   return {
-    send: (obj) => {
-      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(obj))
+    send,
+    close: () => {
+      stopSync()
+      socket.close()
     },
-    close: () => socket.close(),
   }
 }

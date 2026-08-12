@@ -1,4 +1,6 @@
 <script lang="ts">
+  import GauntletPrompt from './GauntletPrompt.svelte'
+
   let {
     payload = {},
     myId = null,
@@ -16,8 +18,9 @@
     ontap?: (side: 'left' | 'right') => void
   } = $props()
 
-  // Blind controller: NO prompt here — eyes on the big screen. The server's broadcast
-  // state (not the phone clock) opens the pads, so clock skew can't shrink anyone's window.
+  // The command is mirrored here (top) with the pads below, so a player never has to
+  // ping-pong between phone and TV. The server's broadcast state — not the phone clock —
+  // still opens the pads, so clock skew can't shrink or widen anyone's window.
   const stage = $derived(String(payload.state ?? 'idle'))
   const mode = $derived(String(payload.mode ?? 'tap'))
   const open = $derived(stage === 'prompt')
@@ -68,30 +71,32 @@
       {#if tiebreak}<span class="chip hotchip">SUDDEN DEATH</span>{/if}
     </div>
 
-    {#if stage === 'results'}
-      <div class="verdict" class:good={gotIt} class:bad={!gotIt}>
-        <span class="vmark">{gotIt ? '✓' : '✗'}</span>
-        <span class="vtext">{gotIt ? '+1' : 'missed'}</span>
-      </div>
-    {:else if open}
-      {#if locked}
+    <!-- command zone: the round's command, or its verdict once the window closes -->
+    <div class="cmdzone">
+      {#if stage === 'results'}
+        <div class="verdict" class:good={gotIt} class:bad={!gotIt}>
+          <span class="vmark">{gotIt ? '✓' : '✗'}</span>
+          <span class="vtext">{gotIt ? '+1' : 'missed'}</span>
+        </div>
+      {:else if open}
+        <GauntletPrompt {payload} />
+      {:else}
+        <p class="phone-note">next command incoming…</p>
+      {/if}
+    </div>
+
+    <!-- fixed-height: the pads must never move under a sub-second window -->
+    <div class="feedback">
+      {#if open && locked}
         <div class="lockin {locked === 'right' ? 'yes' : 'no'}">
           {locked === 'right' ? 'YES ✓' : 'NO ✓'}
         </div>
-        <p class="phone-note">locked in</p>
-      {:else if taps > 0}
+      {:else if open && taps > 0}
         {#key pulse}
           <div class="tapcount">{taps}</div>
         {/key}
-        <p class="phone-note">taps in</p>
-      {:else}
-        <p class="phone-title now">NOW.</p>
-        <p class="phone-note">do what the screen says</p>
       {/if}
-    {:else}
-      <p class="phone-title">Wait for it…</p>
-      <p class="phone-note">eyes on the big screen</p>
-    {/if}
+    </div>
 
     <div class="pads" class:hot={open && !locked}>
       {#if mode === 'yesno'}
@@ -117,8 +122,16 @@
 
 <style>
   .gauntlet {
-    display: flex; flex-direction: column; align-items: center; gap: 0.9rem;
-    width: 100%; flex: 1; justify-content: center;
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; flex: 1; justify-content: space-evenly;
+  }
+  /* command above, pads below, evenly spread — no dead gap in the middle */
+  .cmdzone {
+    flex: 0 0 auto; min-height: 8rem; width: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .feedback {
+    height: 3.6rem; display: flex; align-items: center; justify-content: center;
   }
   .scorebar { display: flex; gap: 0.5rem; }
   .chip {
@@ -128,9 +141,8 @@
   .chip b { color: var(--clay-deep); font-weight: 500; }
   .hotchip { color: var(--clay-deep); border-color: var(--clay); }
 
-  .now { font-size: 2rem; }
   .tapcount {
-    font-family: var(--serif); font-size: 4.6rem; line-height: 1; color: var(--clay-deep);
+    font-family: var(--serif); font-size: 3.2rem; line-height: 1; color: var(--clay-deep);
     animation: tapPop 0.18s ease;
   }
   @keyframes tapPop {
@@ -138,7 +150,7 @@
     100% { transform: scale(1); }
   }
   .lockin {
-    font-family: var(--serif); font-size: 3rem; line-height: 1.1; padding: 0.4rem 1.6rem;
+    font-family: var(--serif); font-size: 2rem; line-height: 1.1; padding: 0.3rem 1.4rem;
     border-radius: 1rem; animation: tapPop 0.18s ease;
   }
   .lockin.yes { color: #3d6b2f; background: rgba(107, 143, 94, 0.16); }
@@ -158,7 +170,7 @@
     touch-action: manipulation;
   }
   .pad {
-    flex: 1; padding: 3.6rem 0; border-radius: 1.4rem; border: 2px solid var(--line);
+    flex: 1; padding: 3rem 0; border-radius: 1.4rem; border: 2px solid var(--line);
     background: var(--paper); font-size: 1.7rem; color: var(--ink-soft);
     font-family: var(--mono); letter-spacing: 0.08em;
     user-select: none; -webkit-user-select: none; touch-action: manipulation;
@@ -170,5 +182,5 @@
   .pad.yes { background: rgba(107, 143, 94, 0.14); border-color: #6b8f5e; color: #3d6b2f; }
   .pad.no { background: rgba(192, 57, 43, 0.11); border-color: #c0392b; color: #a03325; }
   .pad.yes:disabled, .pad.no:disabled { opacity: 0.3; }
-  .pad.big { padding: 4.6rem 0; font-size: 2.1rem; letter-spacing: 0.2em; }
+  .pad.big { padding: 3.8rem 0; font-size: 2.1rem; letter-spacing: 0.2em; }
 </style>

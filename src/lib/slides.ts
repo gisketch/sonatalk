@@ -116,7 +116,7 @@ export const slides: SlideDef[] = [
   {
     component: GauntletSlide,
     notes:
-      "POST-TALK GAME 3 — the finale, best prize. One click starts it; rounds auto-run and accelerate. Phones: giant TAP pad for count commands, YES/NO for questions. Every correct answer scores; the round NOBODY gets ends it — top score wins, ties go to sudden death. Roasts + 🔥 streaks on the results beats. Crown → 'the podium'.",
+      "POST-TALK GAME 3 — the finale, best prize. One click starts it; rounds auto-run and accelerate. The command shows on BOTH the deck and every phone (revealed together on the server clock, TV delay included) — say 'play off your phone, watch the wall for carnage'. Phones: giant TAP pad for count commands, YES/NO for questions. Every correct answer scores; the round NOBODY gets ends it — top score wins, ties go to sudden death. Roasts + 🔥 streaks on the results beats. Crown → 'the podium'.",
   },
   {
     component: ChampionsSlide,

@@ -44,6 +44,9 @@ export function beginRound(session, now, displayLagMs = 0) {
     tiebreak: (session.gauntletLeaders?.length ?? 0) > 0,
     // announced publicly at the tie anyway; phones use it to bench non-leaders
     ...(session.gauntletLeaders?.length ? { leaderIds: session.gauntletLeaders } : {}),
+    // lagMs lets a phone that hasn't measured the server clock yet still hold the
+    // command for the TV delay (reveal = arrival + lagMs) instead of showing it early
+    lagMs: lag,
     showAt: now + lag,
     closesAt: now + lag + spec.windowMs,
   }

@@ -47,6 +47,13 @@ export function attachWs(httpServer, session, presenterToken) {
       let msg
       try { msg = JSON.parse(raw) } catch { return }
 
+      // Clock sync, open to any client: phones reveal the gauntlet command on the
+      // server's clock, so they need an offset that survives a wrong device clock.
+      if (msg.type === 'ping') {
+        socket.send(JSON.stringify({ type: 'pong', t0: msg.t0, now: Date.now() }))
+        return
+      }
+
       if (msg.type === 'hello') {
         if (msg.role === 'presenter' && msg.token === presenterToken) {
           socket.role = 'presenter'

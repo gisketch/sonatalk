@@ -12,5 +12,6 @@ Name specs `YYYY-MM-DD-short-slug.md`. Keep them proportional to risk and ambigu
 - [2026-07-31 RPS battle & reveal](2026-07-31-rps-battle.md): pick, deck-side battle sim, winners, receipts gallery. Build third.
 - [2026-08-11 Post-talk games](2026-08-11-post-talk-games.md): rematch mode, persistent characters, late-joiner onboarding; games 2–3 TBD.
 - [2026-08-11 Race game](2026-08-11-race-game.md): game 2 alternate-tap sprint, champions record, `/racing` test route.
-- [2026-08-11 The Gauntlet](2026-08-11-gauntlet.md): game 3 rapid-command elimination — generated prompts, deck-only display, blind pads.
+- [2026-08-11 The Gauntlet](2026-08-11-gauntlet.md): game 3 rapid-command elimination — generated prompts, accelerating rounds, score attack (phone display superseded by the 2026-08-12 spec).
+- [2026-08-12 Gauntlet prompt on the phone](2026-08-12-gauntlet-phone-prompt.md): command + timer mirrored on phones, clock-synced so reveal matches the TV.
 - [2026-08-11 Interactive concept slides](2026-08-11-interactive-concept-slides.md): sensors as live gate simulations, docs before/after toggle. Proposed.

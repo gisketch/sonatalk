@@ -46,6 +46,17 @@ describe('ws roles', () => {
     a.socket.close()
   })
 
+  it('answers ping with the server clock so phones can measure their offset', async () => {
+    const phone = await client({ role: 'phone' })
+    const t0 = Date.now()
+    send(phone.socket, { type: 'ping', t0 })
+    await wait()
+    const pong = phone.messages.find((m) => m.type === 'pong')
+    expect(pong.t0).toBe(t0)
+    expect(Math.abs(pong.now - Date.now())).toBeLessThan(2_000)
+    phone.socket.close()
+  })
+
   it('rejects phase advances from phones and wrong tokens', async () => {
     const phone = await client({ role: 'phone' })
     send(phone.socket, { type: 'advance', phase: 'names' })
